@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  laravel-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: delivery-saas-api
+    volumes:
+      - .:/var/www
+    expose:
+      - "9000"
+    networks:
+      - laravel
+
+  webserver:
+    image: nginx:alpine
+    container_name: delivery-saas-web
+    volumes:
+      - .:/var/www
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    ports:
+      - "9005:80"        # Host 9005 → Nginx port 80
+    depends_on:
+      - laravel-app
+    networks:
+      - laravel
+
+networks:
+  laravel:
+    driver: bridge
