@@ -13,4 +13,8 @@ class Company extends Model
     {
         return $this->belongsToMany(\App\Models\DeliveryMan::class, 'company_delivery_man');
     }
+    public function deliveries()
+    {
+        return $this->hasMany(\App\Models\Delivery::class,'company_id');
+    }
 }

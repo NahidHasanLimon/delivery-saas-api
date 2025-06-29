@@ -28,29 +28,28 @@ class CompanyDeliveryManController extends Controller
             // add other fields as needed
         ]);
 
-        // Check for existing by email or mobile_no
-        $deliveryManByEmail = $request->email ? DeliveryMan::where('email', $request->email)->first() : null;
-        $deliveryManByMobile = DeliveryMan::where('mobile_no', $request->mobile_no)->first();
+        $exists = DeliveryMan::where(function($q) use ($request) {
+            if ($request->email) {
+                $q->where('email', $request->email);
+            }
+            $q->orWhere('mobile_no', $request->mobile_no);
+        })->exists();
 
-        if ($deliveryManByEmail && $deliveryManByMobile && $deliveryManByEmail->id !== $deliveryManByMobile->id) {
-            return $this->error('Both email and mobile_no must be unique to create a new delivery man.', [], 422);
+        if ($exists) {
+            return $this->error('Email or mobile number already exists.', [], 422);
         }
 
-        $deliveryMan = $deliveryManByEmail ?: $deliveryManByMobile;
-
-        if (!$deliveryMan) {
-            $deliveryMan = DeliveryMan::create([
-                'name'      => $request->name,
-                'email'     => $request->email,
-                'mobile_no' => $request->mobile_no,
-                // set other fields as needed
-            ]);
-        }
+        $deliveryMan = DeliveryMan::create([
+            'name'      => $request->name,
+            'email'     => $request->email,
+            'mobile_no' => $request->mobile_no,
+            // set other fields as needed
+        ]);
 
         $company = Auth::guard('company_user')->user()->company;
         $company->deliveryMen()->syncWithoutDetaching([$deliveryMan->id]);
 
-        return $this->success($deliveryMan, 'Delivery man linked to company.');
+        return $this->success($deliveryMan, 'Delivery man created and linked to company.');
     }
 
     // Remove (unlink) a delivery man from the company
