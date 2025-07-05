@@ -12,4 +12,9 @@ class Customer extends Model
         'mobile_no',
         'address',
     ];
+
+    public function deliveries()
+    {
+        return $this->hasMany(\App\Models\Delivery::class, 'customer_id');
+    }
 }

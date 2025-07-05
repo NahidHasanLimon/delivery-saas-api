@@ -3,6 +3,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Company\CompanyUserAuthController;
 use App\Http\Controllers\Company\CompanyDeliveryManController;
 use App\Http\Controllers\Company\CompanyDeliveryController;
+use App\Http\Controllers\Company\CompanyCustomerController;
 
 Route::prefix('/')->group(function () {
     // Public
@@ -25,5 +26,12 @@ Route::prefix('/')->group(function () {
         Route::post('deliveries', [CompanyDeliveryController::class, 'store']);
         Route::get('deliveries/{id}', [CompanyDeliveryController::class, 'show']);
         Route::patch('deliveries/{id}', [CompanyDeliveryController::class, 'update']);
+
+        // Customer management routes
+        Route::get('customers', [CompanyCustomerController::class, 'index']);
+        Route::get('customers/{id}', [CompanyCustomerController::class, 'show']);
+        Route::post('customers', [CompanyCustomerController::class, 'store']);
+        Route::put('customers/{id}', [CompanyCustomerController::class, 'update']);
+        Route::delete('customers/{id}', [CompanyCustomerController::class, 'destroy']);
     });
 });

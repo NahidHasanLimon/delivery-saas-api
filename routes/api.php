@@ -2,6 +2,7 @@
 // routes/api.php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DeliveryMan\DeliveryManAuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,6 +22,6 @@ Route::middleware('api')->group(function () {
     // // Admin-panel auth
     // Route::prefix('admin')->group(base_path('routes/admin.php'));
 
-    // // Delivery-man auth
-    // Route::prefix('deliveryman')->group(base_path('routes/deliveryman.php'));
+    // Delivery-man auth
+    Route::prefix('delivery-man')->group(base_path('routes/deliveryman.php'));
 });
