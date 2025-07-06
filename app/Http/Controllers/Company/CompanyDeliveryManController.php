@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Company;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\LogsCompanyActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\DeliveryMan;
@@ -10,6 +11,7 @@ use App\Models\Company;
 
 class CompanyDeliveryManController extends Controller
 {
+    use LogsCompanyActivity;
     // List all delivery men for the authenticated company
     public function index(Request $request)
     {
@@ -49,6 +51,9 @@ class CompanyDeliveryManController extends Controller
         $company = Auth::guard('company_user')->user()->company;
         $company->deliveryMen()->syncWithoutDetaching([$deliveryMan->id]);
 
+        // Log activity
+        $this->logDeliveryManActivity('delivery_man_linked', $deliveryMan, "Delivery man {$deliveryMan->name} linked to company");
+
         return $this->success($deliveryMan, 'Delivery man created and linked to company.');
     }
 
@@ -56,7 +61,15 @@ class CompanyDeliveryManController extends Controller
     public function destroy(Request $request, $id)
     {
         $company = Auth::guard('company_user')->user()->company;
+        
+        // Get the delivery man before unlinking for logging
+        $deliveryMan = $company->deliveryMen()->findOrFail($id);
+        
         $company->deliveryMen()->detach($id);
+        
+        // Log activity
+        $this->logDeliveryManActivity('delivery_man_unlinked', $deliveryMan, "Delivery man {$deliveryMan->name} unlinked from company");
+        
         return $this->success(null, 'Delivery man unlinked from company.');
     }
 }

@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Company;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\LogsCompanyActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Customer;
 
 class CompanyCustomerController extends Controller
 {
+    use LogsCompanyActivity;
     // List customers (paginated, descending)
     public function index(Request $request)
     {
@@ -44,6 +46,10 @@ class CompanyCustomerController extends Controller
             'mobile_no' => $request->mobile_no,
             'address' => $request->address,
         ]);
+        
+        // Log activity
+        $this->logCustomerActivity('customer_created', $customer);
+        
         return $this->success($customer, 'Customer created successfully.');
     }
 
@@ -58,6 +64,10 @@ class CompanyCustomerController extends Controller
             'address' => 'nullable|string',
         ]);
         $customer->update($request->only(['name', 'mobile_no', 'address']));
+        
+        // Log activity
+        $this->logCustomerActivity('customer_updated', $customer);
+        
         return $this->success($customer, 'Customer updated successfully.');
     }
 
@@ -66,6 +76,10 @@ class CompanyCustomerController extends Controller
     {
         $company = Auth::guard('company_user')->user()->company;
         $customer = Customer::where('company_id', $company->id)->findOrFail($id);
+        
+        // Log activity before deletion
+        $this->logCustomerActivity('customer_deleted', $customer);
+        
         $customer->delete();
         return $this->success(null, 'Customer deleted successfully.');
     }

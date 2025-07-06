@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('deliveries', function (Blueprint $table) {
             $table->id();
+            $table->string('tracking_number')->unique()->after('id');
+            $table->index('tracking_number');
+            
             $table->unsignedBigInteger('company_id');
             $table->unsignedBigInteger('delivery_man_id');
             $table->unsignedBigInteger('customer_id');
@@ -33,6 +36,8 @@ return new class extends Migration
 
             $table->timestamp('assigned_at')->nullable();  // ✅ when it was assigned to delivery man
             $table->timestamp('delivered_at')->nullable(); // ✅ when it was completed
+
+            $table->decimal('amount', 12, 2)->nullable(); // 💰 delivery revenue/price
 
             $table->timestamps(); // ✅ created_at, updated_at
 

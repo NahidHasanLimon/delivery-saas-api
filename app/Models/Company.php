@@ -17,4 +17,16 @@ class Company extends Model
     {
         return $this->hasMany(\App\Models\Delivery::class,'company_id');
     }
+    public function customers()
+    {
+        return $this->hasMany(\App\Models\Customer::class, 'company_id');
+    }
+    public function companyUsers()
+    {
+        return $this->hasMany(\App\Models\CompanyUser::class, 'company_id');
+    }
+    public function activityLogs()
+    {
+        return $this->hasMany(\App\Models\CompanyActivityLog::class, 'company_id');
+    }
 }

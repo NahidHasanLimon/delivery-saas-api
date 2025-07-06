@@ -33,4 +33,9 @@ class DeliveryMan extends Authenticatable implements JWTSubject
     {
         return $this->belongsToMany(\App\Models\Company::class, 'company_delivery_man');
     }
+
+    public function deliveries()
+    {
+        return $this->hasMany(\App\Models\Delivery::class);
+    }
 }

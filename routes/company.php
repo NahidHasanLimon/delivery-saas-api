@@ -4,6 +4,7 @@ use App\Http\Controllers\Company\CompanyUserAuthController;
 use App\Http\Controllers\Company\CompanyDeliveryManController;
 use App\Http\Controllers\Company\CompanyDeliveryController;
 use App\Http\Controllers\Company\CompanyCustomerController;
+use App\Http\Controllers\Company\CompanyDashboardController;
 
 Route::prefix('/')->group(function () {
     // Public
@@ -33,5 +34,8 @@ Route::prefix('/')->group(function () {
         Route::post('customers', [CompanyCustomerController::class, 'store']);
         Route::put('customers/{id}', [CompanyCustomerController::class, 'update']);
         Route::delete('customers/{id}', [CompanyCustomerController::class, 'destroy']);
+
+        // Dashboard
+        Route::get('dashboard', [CompanyDashboardController::class, 'summary']);
     });
 });

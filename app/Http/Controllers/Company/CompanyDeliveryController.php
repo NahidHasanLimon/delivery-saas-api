@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Company;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\LogsCompanyActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Delivery;
@@ -11,6 +12,7 @@ use App\Enums\DeliveryStatus;
 
 class CompanyDeliveryController extends Controller
 {
+    use LogsCompanyActivity;
     // List deliveries for the authenticated company
     public function index(Request $request)
     {
@@ -89,8 +91,11 @@ class CompanyDeliveryController extends Controller
             'delivery_mode'   => $request->delivery_mode,
             'assigned_at'     => $request->assigned_at,
             'delivered_at'    => $request->delivered_at,
-            // 'details'         => $request->details, // removed, not in migration
+            'amount'          => $request->amount, // add amount to creation
         ]);
+
+        // Log activity
+        $this->logDeliveryActivity('delivery_created', $delivery->load(['customer', 'deliveryMan']));
 
         return $this->success($delivery, 'Delivery created successfully.');
     }
@@ -128,11 +133,19 @@ class CompanyDeliveryController extends Controller
             if ($newStatus === DeliveryStatus::DELIVERED) {
                 $delivery->delivered_at = now();
             }
+            
+            // Log status change activity
+            $this->logDeliveryActivity('delivery_status_changed', $delivery->load(['customer', 'deliveryMan']));
         }
+        
         if ($request->has('delivery_man_id')) {
             $delivery->delivery_man_id = $request->delivery_man_id;
             $delivery->assigned_at = now();
+            
+            // Log assignment activity
+            $this->logDeliveryActivity('delivery_assigned', $delivery->load(['customer', 'deliveryMan']));
         }
+        
         $delivery->save();
 
         $delivery->load(['customer', 'deliveryMan']);
