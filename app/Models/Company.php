@@ -29,4 +29,9 @@ class Company extends Model
     {
         return $this->hasMany(\App\Models\CompanyActivityLog::class, 'company_id');
     }
+
+    public function addresses()
+    {
+        return $this->hasMany(\App\Models\Address::class, 'company_id');
+    }
 }

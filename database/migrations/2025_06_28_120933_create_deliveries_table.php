@@ -14,15 +14,27 @@ return new class extends Migration
         Schema::create('deliveries', function (Blueprint $table) {
             $table->id();
             $table->string('tracking_number')->unique()->after('id');
-            $table->index('tracking_number');
-            
+
             $table->unsignedBigInteger('company_id');
-            $table->unsignedBigInteger('delivery_man_id');
+            $table->unsignedBigInteger('delivery_man_id')->nullable();
             $table->unsignedBigInteger('customer_id');
 
-            $table->text('delivery_address'); // ✅ only one needed (you had it twice)
-            $table->decimal('latitude', 10, 7)->nullable();  // ✅ optional geo info
-            $table->decimal('longitude', 10, 7)->nullable(); // ✅ optional geo info
+           // Optional FK to saved address (not enforced as FK for now)
+            $table->unsignedBigInteger('pickup_address_id')->nullable();
+            $table->unsignedBigInteger('drop_address_id')->nullable();
+
+            // Snapshot of pickup
+            $table->string('pickup_label')->nullable(); 
+            $table->text('pickup_address');
+            $table->decimal('pickup_latitude', 10, 7)->nullable();
+            $table->decimal('pickup_longitude', 10, 7)->nullable();
+
+            // Snapshot of drop
+            $table->string('drop_label')->nullable(); 
+            $table->text('drop_address');
+            $table->decimal('drop_latitude', 10, 7)->nullable();
+            $table->decimal('drop_longitude', 10, 7)->nullable();
+
 
             $table->text('delivery_notes')->nullable();  // ✅ useful for internal or user instructions
             $table->string('delivery_type')->nullable(); // e.g., 'order', 'return', 'pickup'
@@ -36,16 +48,16 @@ return new class extends Migration
 
             $table->timestamp('assigned_at')->nullable();  // ✅ when it was assigned to delivery man
             $table->timestamp('delivered_at')->nullable(); // ✅ when it was completed
-
+            $table->timestamp('in_progress_at')->nullable(); 
+            
             $table->decimal('amount', 12, 2)->nullable(); // 💰 delivery revenue/price
 
             $table->timestamps(); // ✅ created_at, updated_at
 
             $table->index(['company_id', 'delivery_man_id']);
             $table->index('status');
-            $table->index('expected_delivery_time');
-
-
+            $table->index('tracking_number');
+            
             $table->softDeletes(); // 🔄 optional but highly recommended
 
         });

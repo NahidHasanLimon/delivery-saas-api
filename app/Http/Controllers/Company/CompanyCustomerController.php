@@ -38,13 +38,22 @@ class CompanyCustomerController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'mobile_no' => 'required|string|unique:customers,mobile_no,NULL,id,company_id,' . $company->id,
+            'email' => [
+                'nullable',
+                'email',
+                'max:255',
+                'unique:customers,email,NULL,id,company_id,' . $company->id
+            ],
             'address' => 'nullable|string',
+            'customer_code' => 'nullable|string|max:255',
         ]);
         $customer = Customer::create([
             'company_id' => $company->id,
             'name' => $request->name,
             'mobile_no' => $request->mobile_no,
+            'email' => $request->email,
             'address' => $request->address,
+            'customer_code' => $request->customer_code,
         ]);
         
         // Log activity
@@ -61,9 +70,16 @@ class CompanyCustomerController extends Controller
         $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'mobile_no' => 'sometimes|required|string|unique:customers,mobile_no,' . $customer->id . ',id,company_id,' . $company->id,
+            'email' => [
+                'nullable',
+                'email',
+                'max:255',
+                'unique:customers,email,' . $customer->id . ',id,company_id,' . $company->id
+            ],
             'address' => 'nullable|string',
+            'customer_code' => 'nullable|string|max:255',
         ]);
-        $customer->update($request->only(['name', 'mobile_no', 'address']));
+        $customer->update($request->only(['name', 'mobile_no', 'email', 'address', 'customer_code']));
         
         // Log activity
         $this->logCustomerActivity('customer_updated', $customer);

@@ -11,16 +11,30 @@ class Delivery extends Model
         'delivery_man_id',
         'customer_id',
         'tracking_number',
-        'delivery_address',
-        'latitude',
-        'longitude',
+        
+        // Pickup address fields
+        'pickup_address_id',
+        'pickup_label',
+        'pickup_address',
+        'pickup_latitude',
+        'pickup_longitude',
+        
+        // Drop address fields
+        'drop_address_id',
+        'drop_label',
+        'drop_address',
+        'drop_latitude',
+        'drop_longitude',
+        
         'delivery_notes',
         'delivery_type',
         'expected_delivery_time',
         'delivery_mode',
+        'status',
         'assigned_at',
         'delivered_at',
-        'amount', // ensure amount is fillable
+        'in_progress_at',
+        'amount',
     ];
 
     protected static function boot()
@@ -63,5 +77,20 @@ class Delivery extends Model
     public function deliveryMan()
     {
         return $this->belongsTo(\App\Models\DeliveryMan::class, 'delivery_man_id');
+    }
+
+    public function pickupAddress()
+    {
+        return $this->belongsTo(\App\Models\Address::class, 'pickup_address_id');
+    }
+
+    public function dropAddress()
+    {
+        return $this->belongsTo(\App\Models\Address::class, 'drop_address_id');
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(\App\Models\Company::class);
     }
 }
