@@ -66,7 +66,7 @@ class CompanyCustomerAddressController extends Controller
         $address = Address::create([
             'company_id' => $company->id,
             'addressable_id' => $customer->id,
-            'addressable_type' => Customer::class,
+            'addressable_type' => 'customer',
             'address_type' => $request->address_type,
             'label' => $request->label,
             'address' => $request->address,
