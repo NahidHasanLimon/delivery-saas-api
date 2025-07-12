@@ -93,4 +93,40 @@ class Delivery extends Model
     {
         return $this->belongsTo(\App\Models\Company::class);
     }
+
+    /**
+     * Get the delivery items for this delivery.
+     */
+    public function deliveryItems()
+    {
+        return $this->hasMany(DeliveryItem::class);
+    }
+
+    /**
+     * Get the items for this delivery.
+     */
+    public function items()
+    {
+        return $this->belongsToMany(Item::class, 'delivery_items')
+                    ->withPivot('quantity', 'notes')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Get formatted delivery items with clean structure
+     */
+    public function getFormattedItemsAttribute()
+    {
+        return $this->items->map(function ($item) {
+            return [
+                'item_id' => $item->id,
+                'name' => $item->name,
+                'code' => $item->code,
+                'unit' => $item->unit,
+                'quantity' => $item->pivot->quantity,
+                'notes' => $item->pivot->notes,
+                'item_notes' => $item->notes, // Original item notes
+            ];
+        });
+    }
 }

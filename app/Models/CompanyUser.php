@@ -15,6 +15,7 @@ class CompanyUser extends Authenticatable implements JWTSubject
         'email',
         'password',
         'role',
+        'device_token',
     ];
     protected $hidden = ['password'];
 

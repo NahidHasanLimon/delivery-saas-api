@@ -41,12 +41,16 @@ trait LogsCompanyActivity
      */
     protected function logDeliveryActivity($action, $delivery, $description = null)
     {
+        $customerName = $delivery->customer ? $delivery->customer->name : 'Unknown Customer';
+        $deliveryManName = $delivery->deliveryMan ? $delivery->deliveryMan->name : 'unassigned';
+        $trackingNumber = $delivery->tracking_number ?? 'Unknown';
+        
         $descriptions = [
-            'delivery_created' => "New delivery {$delivery->tracking_number} created for {$delivery->customer->name}",
-            'delivery_assigned' => "Delivery {$delivery->tracking_number} assigned to {$delivery->deliveryMan->name}",
-            'delivery_status_changed' => "Delivery {$delivery->tracking_number} status changed to {$delivery->status}",
-            'delivery_completed' => "Delivery {$delivery->tracking_number} completed for {$delivery->customer->name}",
-            'delivery_updated' => "Delivery {$delivery->tracking_number} updated",
+            'delivery_created' => "New delivery {$trackingNumber} created for {$customerName}",
+            'delivery_assigned' => "Delivery {$trackingNumber} assigned to {$deliveryManName}",
+            'delivery_status_changed' => "Delivery {$trackingNumber} status changed to {$delivery->status}",
+            'delivery_completed' => "Delivery {$trackingNumber} completed for {$customerName}",
+            'delivery_updated' => "Delivery {$trackingNumber} updated",
         ];
 
         $finalDescription = $description ?? $descriptions[$action] ?? "Delivery action: {$action}";
@@ -59,10 +63,12 @@ trait LogsCompanyActivity
      */
     protected function logCustomerActivity($action, $customer, $description = null)
     {
+        $customerName = $customer ? $customer->name : 'Unknown Customer';
+        
         $descriptions = [
-            'customer_created' => "New customer created: {$customer->name}",
-            'customer_updated' => "Customer {$customer->name} updated",
-            'customer_deleted' => "Customer {$customer->name} deleted",
+            'customer_created' => "New customer created: {$customerName}",
+            'customer_updated' => "Customer {$customerName} updated",
+            'customer_deleted' => "Customer {$customerName} deleted",
         ];
 
         $finalDescription = $description ?? $descriptions[$action] ?? "Customer action: {$action}";
@@ -75,9 +81,11 @@ trait LogsCompanyActivity
      */
     protected function logDeliveryManActivity($action, $deliveryMan, $description = null)
     {
+        $deliveryManName = $deliveryMan ? $deliveryMan->name : 'Unknown Delivery Man';
+        
         $descriptions = [
-            'delivery_man_linked' => "Delivery man {$deliveryMan->name} linked to company",
-            'delivery_man_unlinked' => "Delivery man {$deliveryMan->name} unlinked from company",
+            'delivery_man_linked' => "Delivery man {$deliveryManName} linked to company",
+            'delivery_man_unlinked' => "Delivery man {$deliveryManName} unlinked from company",
         ];
 
         $finalDescription = $description ?? $descriptions[$action] ?? "Delivery man action: {$action}";

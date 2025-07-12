@@ -18,8 +18,10 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('mobile_no')->unique();
             $table->string('password');
+            $table->string('device_token')->nullable(); // For push notifications
             $table->enum('role', ['admin', 'staff'])->default('admin');
             $table->rememberToken();
+            
             $table->timestamps();
         });
     }

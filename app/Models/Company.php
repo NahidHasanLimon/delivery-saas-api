@@ -34,4 +34,9 @@ class Company extends Model
     {
         return $this->hasMany(\App\Models\Address::class, 'company_id');
     }
+
+    public function items()
+    {
+        return $this->hasMany(\App\Models\Item::class, 'company_id');
+    }
 }

@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Delivery;
 use App\Models\Customer;
+use App\Models\Item;
+use App\Models\DeliveryItem;
 use App\Enums\DeliveryStatus;
 
 class CompanyDeliveryController extends Controller
@@ -17,8 +19,16 @@ class CompanyDeliveryController extends Controller
     public function index(Request $request)
     {
         $company = Auth::guard('company_user')->user()->company;
-        $deliveries = $company->deliveries()->with(['customer', 'deliveryMan'])->get();
-        return $this->success($deliveries, 'Deliveries fetched.');
+        $deliveries = $company->deliveries()->with(['customer', 'deliveryMan', 'items'])->get();
+        
+        // Format each delivery's items
+        $formattedDeliveries = $deliveries->map(function ($delivery) {
+            $deliveryArray = $delivery->toArray();
+            $deliveryArray['items'] = $delivery->formatted_items;
+            return $deliveryArray;
+        });
+        
+        return $this->success($formattedDeliveries, 'Deliveries fetched.');
     }
    
 
@@ -37,7 +47,6 @@ class CompanyDeliveryController extends Controller
                 'required_without:customer_id',
                 'email',
                 'max:255',
-                'unique:customers,email,NULL,id,company_id,' . $company->id
             ],
             'customer_mobile_no'  => [
                 'required_without:customer_id',
@@ -60,6 +69,40 @@ class CompanyDeliveryController extends Controller
             'expected_delivery_time' => 'nullable|date',
             'delivery_mode'   => 'nullable|string',
             'amount'          => 'nullable|numeric|min:0',
+
+            // Items for delivery
+            'items' => 'nullable|array',
+            'items.*.item_id' => 'nullable|exists:items,id',
+            'items.*.name' => [
+                'required_without:items.*.item_id',
+                'string',
+                'max:255',
+                function ($attribute, $value, $fail) use ($company) {
+                    if ($value && Item::where('company_id', $company->id)->where('name', $value)->exists()) {
+                        // Extract the index from the attribute path (e.g., "items.0.name" -> "Item #1")
+                        preg_match('/items\.(\d+)\.name/', $attribute, $matches);
+                        $itemIndex = isset($matches[1]) ? ($matches[1] + 1) : 'one of your items';
+                        $fail("Item #{$itemIndex}: An item with the name '{$value}' already exists for your company.");
+                    }
+                }
+            ],
+            'items.*.code' => [
+                'nullable',
+                'string',
+                'max:255',
+                function ($attribute, $value, $fail) use ($company) {
+                    if ($value && Item::where('company_id', $company->id)->where('code', $value)->exists()) {
+                        // Extract the index from the attribute path (e.g., "items.0.code" -> "Item #1")
+                        preg_match('/items\.(\d+)\.code/', $attribute, $matches);
+                        $itemIndex = isset($matches[1]) ? ($matches[1] + 1) : 'one of your items';
+                        $fail("Item #{$itemIndex}: An item with the code '{$value}' already exists for your company.");
+                    }
+                }
+            ],
+            'items.*.unit' => 'nullable|string|max:50',
+            'items.*.item_notes' => 'nullable|string',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.notes' => 'nullable|string', // delivery-specific item notes
         ]);
 
         if ($request->customer_id) {
@@ -110,18 +153,33 @@ class CompanyDeliveryController extends Controller
             'status'          => $request->delivery_man_id ? DeliveryStatus::ASSIGNED->value : DeliveryStatus::PENDING->value,
         ]);
 
-        // Log activity
-        $this->logDeliveryActivity('delivery_created', $delivery->load(['customer', 'deliveryMan']));
+        // Handle delivery items
+        if ($request->has('items') && is_array($request->items)) {
+            $this->handleDeliveryItems($request->items, $delivery, $company);
+        }
 
-        return $this->success($delivery, 'Delivery created successfully.');
+        // Log activity
+        $this->logDeliveryActivity('delivery_created', $delivery->load(['customer', 'deliveryMan', 'items']));
+
+        // Load relationships and return with formatted items
+        $delivery->load(['customer', 'deliveryMan', 'items']);
+        $response = $delivery->toArray();
+        $response['items'] = $delivery->formatted_items;
+
+        return $this->success($response, 'Delivery created successfully.');
     }
 
     // Show a single delivery for the authenticated company
     public function show($id)
     {
         $company = Auth::guard('company_user')->user()->company;
-        $delivery = $company->deliveries()->with(['customer', 'deliveryMan'])->findOrFail($id);
-        return $this->success($delivery, 'Delivery fetched.');
+        $delivery = $company->deliveries()->with(['customer', 'deliveryMan', 'items'])->findOrFail($id);
+        
+        // Format response with clean items structure
+        $response = $delivery->toArray();
+        $response['items'] = $delivery->formatted_items;
+        
+        return $this->success($response, 'Delivery fetched.');
     }
 
     // Update delivery: assign delivery man, update status, and timestamps
@@ -219,6 +277,40 @@ class CompanyDeliveryController extends Controller
             'latitude' => $latitude,
             'longitude' => $longitude,
         ];
+    }
+
+    /**
+     * Handle delivery items - either from existing items or create new ones
+     */
+    private function handleDeliveryItems($items, $delivery, $company)
+    {
+        foreach ($items as $itemData) {
+            if (isset($itemData['item_id']) && $itemData['item_id']) {
+                // Use existing item
+                $item = Item::where('id', $itemData['item_id'])
+                    ->where('company_id', $company->id)
+                    ->firstOrFail();
+            } else {
+                // Create new item
+                $item = Item::create([
+                    'company_id' => $company->id,
+                    'name' => $itemData['name'],
+                    'code' => $itemData['code'] ?? null,
+                    'unit' => $itemData['unit'] ?? null,
+                    'notes' => $itemData['item_notes'] ?? null,
+                    'is_active' => true,
+                ]);
+            }
+
+            // Create delivery item record
+            DeliveryItem::create([
+                'company_id' => $company->id,
+                'delivery_id' => $delivery->id,
+                'item_id' => $item->id,
+                'quantity' => $itemData['quantity'],
+                'notes' => $itemData['notes'] ?? null,
+            ]);
+        }
     }
 }
 

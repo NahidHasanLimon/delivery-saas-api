@@ -6,6 +6,9 @@ use App\Http\Controllers\Company\CompanyDeliveryController;
 use App\Http\Controllers\Company\CompanyCustomerController;
 use App\Http\Controllers\Company\CompanyCustomerAddressController;
 use App\Http\Controllers\Company\CompanyDashboardController;
+use App\Http\Controllers\Company\CompanyItemController;
+use App\Http\Controllers\Company\CompanyNotificationController;
+use App\Http\Controllers\Company\CompanyAddressController;
 
 Route::prefix('/')->group(function () {
     // Public
@@ -41,6 +44,28 @@ Route::prefix('/')->group(function () {
         Route::post('customers/{id}/addresses', [CompanyCustomerAddressController::class, 'store']);
         Route::put('customers/{customerId}/addresses/{addressId}', [CompanyCustomerAddressController::class, 'update']);
         Route::delete('customers/{customerId}/addresses/{addressId}', [CompanyCustomerAddressController::class, 'destroy']);
+
+        // Item management routes
+        Route::get('items', [CompanyItemController::class, 'index']);
+        Route::post('items', [CompanyItemController::class, 'store']);
+        Route::get('items/{id}', [CompanyItemController::class, 'show']);
+        Route::put('items/{id}', [CompanyItemController::class, 'update']);
+        Route::delete('items/{id}', [CompanyItemController::class, 'destroy']);
+
+        // Company address management routes
+        Route::get('addresses', [CompanyAddressController::class, 'index']);
+        Route::post('addresses', [CompanyAddressController::class, 'store']);
+        Route::get('addresses/{id}', [CompanyAddressController::class, 'show']);
+        Route::put('addresses/{id}', [CompanyAddressController::class, 'update']);
+        Route::delete('addresses/{id}', [CompanyAddressController::class, 'destroy']);
+        Route::get('addresses/type/{type}', [CompanyAddressController::class, 'getByType']);
+
+        // Push notification routes
+        Route::post('notifications/device-token', [CompanyNotificationController::class, 'updateDeviceToken']);
+        Route::post('notifications/test', [CompanyNotificationController::class, 'sendTestNotification']);
+        Route::post('notifications/company', [CompanyNotificationController::class, 'sendToCompany']);
+        Route::post('notifications/users', [CompanyNotificationController::class, 'sendToUsers']);
+        Route::get('notifications/users', [CompanyNotificationController::class, 'getCompanyUsers']);
 
         // Dashboard
         Route::get('dashboard', [CompanyDashboardController::class, 'summary']);

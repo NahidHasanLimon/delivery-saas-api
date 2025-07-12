@@ -10,6 +10,8 @@ services:
       - .:/var/www
     expose:
       - "9000"
+    command: 
+      sh -c "chown -R www-data:www-data storage bootstrap/cache && php-fpm"
     networks:
       - laravel
 
