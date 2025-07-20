@@ -15,6 +15,20 @@ enum DeliveryStatus: string
         return array_column(self::cases(), 'value');
     }
 
+    /**
+     * Get all delivery statuses as label-value pairs
+     */
+    public static function options(): array
+    {
+        return [
+            ['label' => 'Pending', 'value' => self::PENDING->value],
+            ['label' => 'Assigned', 'value' => self::ASSIGNED->value],
+            ['label' => 'In Progress', 'value' => self::IN_PROGRESS->value],
+            ['label' => 'Delivered', 'value' => self::DELIVERED->value],
+            ['label' => 'Cancelled', 'value' => self::CANCELLED->value],
+        ];
+    }
+
     public function canTransitionTo(self $to): bool
     {
         return match ($this) {

@@ -29,6 +29,7 @@ Route::prefix('/')->group(function () {
         // Delivery management
         Route::get('deliveries', [CompanyDeliveryController::class, 'index']);
         Route::post('deliveries', [CompanyDeliveryController::class, 'store']);
+        Route::get('deliveries/options', [CompanyDeliveryController::class, 'getDeliveryOptions']);
         Route::get('deliveries/{id}', [CompanyDeliveryController::class, 'show']);
         Route::patch('deliveries/{id}', [CompanyDeliveryController::class, 'update']);
 

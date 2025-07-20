@@ -11,24 +11,125 @@ use App\Models\Customer;
 use App\Models\Item;
 use App\Models\DeliveryItem;
 use App\Enums\DeliveryStatus;
+use App\Enums\DeliveryType;
+use App\Enums\DeliveryMode;
+use App\Rules\NoDuplicateItem;
 
 class CompanyDeliveryController extends Controller
 {
     use LogsCompanyActivity;
-    // List deliveries for the authenticated company
+    // List deliveries for the authenticated company with filtering, searching, and pagination
     public function index(Request $request)
     {
         $company = Auth::guard('company_user')->user()->company;
-        $deliveries = $company->deliveries()->with(['customer', 'deliveryMan', 'items'])->get();
         
+        // Validate request parameters
+        $request->validate([
+            'page' => 'nullable|integer|min:1',
+            'per_page' => 'nullable|integer|min:1|max:100',
+            'delivery_man_id' => 'nullable|exists:delivery_men,id',
+            'delivery_type' => 'nullable|string|in:' . implode(',', DeliveryType::values()),
+            'delivery_mode' => 'nullable|string|in:' . implode(',', DeliveryMode::values()),
+            'status' => 'nullable|string|in:' . implode(',', DeliveryStatus::values()),
+            'tracking_number' => 'nullable|string|max:255',
+            'customer_name' => 'nullable|string|max:255',
+            'customer_mobile' => 'nullable|string|max:20',
+            'from_date' => 'nullable|date',
+            'to_date' => 'nullable|date|after_or_equal:from_date',
+            'sort_by' => 'nullable|string|in:created_at,updated_at,expected_delivery_time,delivered_at,amount',
+            'sort_order' => 'nullable|string|in:asc,desc',
+        ]);
+
+        $query = $company->deliveries()
+            ->with(['customer', 'deliveryMan', 'items']);
+
+        // Apply filters
+        if ($request->filled('delivery_man_id')) {
+            $query->where('delivery_man_id', $request->delivery_man_id);
+        }
+
+        if ($request->filled('delivery_type')) {
+            $query->where('delivery_type', $request->delivery_type);
+        }
+
+        if ($request->filled('delivery_mode')) {
+            $query->where('delivery_mode', $request->delivery_mode);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('tracking_number')) {
+            $query->where('tracking_number', 'LIKE', '%' . $request->tracking_number . '%');
+        }
+
+        // Search by customer details
+        if ($request->filled('customer_name')) {
+            $query->whereHas('customer', function($q) use ($request) {
+                $q->where('name', 'LIKE', '%' . $request->customer_name . '%');
+            });
+        }
+
+        if ($request->filled('customer_mobile')) {
+            $query->whereHas('customer', function($q) use ($request) {
+                $q->where('mobile_no', 'LIKE', '%' . $request->customer_mobile . '%');
+            });
+        }
+
+        // Date range filters
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        $query->orderBy($sortBy, $sortOrder);
+
+        // Pagination
+        $perPage = $request->get('per_page', 15);
+        $deliveries = $query->paginate($perPage);
+
         // Format each delivery's items
-        $formattedDeliveries = $deliveries->map(function ($delivery) {
+        $formattedDeliveries = $deliveries->getCollection()->map(function ($delivery) {
             $deliveryArray = $delivery->toArray();
             $deliveryArray['items'] = $delivery->formatted_items;
             return $deliveryArray;
         });
+
+        // Replace the collection in pagination with formatted data
+        $deliveries->setCollection($formattedDeliveries);
         
-        return $this->success($formattedDeliveries, 'Deliveries fetched.');
+        return $this->success([
+            'deliveries' => $deliveries->items(),
+            'pagination' => [
+                'current_page' => $deliveries->currentPage(),
+                'per_page' => $deliveries->perPage(),
+                'total' => $deliveries->total(),
+                'last_page' => $deliveries->lastPage(),
+                'from' => $deliveries->firstItem(),
+                'to' => $deliveries->lastItem(),
+                'has_more_pages' => $deliveries->hasMorePages(),
+            ],
+            'filters_applied' => [
+                'delivery_man_id' => $request->delivery_man_id,
+                'delivery_type' => $request->delivery_type,
+                'delivery_mode' => $request->delivery_mode,
+                'status' => $request->status,
+                'tracking_number' => $request->tracking_number,
+                'customer_name' => $request->customer_name,
+                'customer_mobile' => $request->customer_mobile,
+                'from_date' => $request->from_date,
+                'to_date' => $request->to_date,
+                'sort_by' => $sortBy,
+                'sort_order' => $sortOrder,
+            ]
+        ], 'Deliveries fetched successfully.');
     }
    
 
@@ -65,16 +166,16 @@ class CompanyDeliveryController extends Controller
             'drop_address'      => 'required_without:drop_address_id|string',
 
             'delivery_notes'  => 'nullable|string',
-            'delivery_type'   => 'nullable|string',
+            'delivery_type'   => 'nullable|string|in:' . implode(',', DeliveryType::values()),
             'expected_delivery_time' => 'nullable|date',
-            'delivery_mode'   => 'nullable|string',
+            'delivery_mode'   => 'nullable|string|in:' . implode(',', DeliveryMode::values()),
             'amount'          => 'nullable|numeric|min:0',
 
             // Items for delivery
-            'items' => 'nullable|array',
-            'items.*.item_id' => 'nullable|exists:items,id',
+            'items' => ['nullable', 'array', new NoDuplicateItem],
+            'items.*.id' => 'nullable|exists:items,id',
             'items.*.name' => [
-                'required_without:items.*.item_id',
+                'required_without:items.*.id',
                 'string',
                 'max:255',
                 function ($attribute, $value, $fail) use ($company) {
@@ -285,9 +386,9 @@ class CompanyDeliveryController extends Controller
     private function handleDeliveryItems($items, $delivery, $company)
     {
         foreach ($items as $itemData) {
-            if (isset($itemData['item_id']) && $itemData['item_id']) {
+            if (isset($itemData['id']) && $itemData['id']) {
                 // Use existing item
-                $item = Item::where('id', $itemData['item_id'])
+                $item = Item::where('id', $itemData['id'])
                     ->where('company_id', $company->id)
                     ->firstOrFail();
             } else {
@@ -311,6 +412,18 @@ class CompanyDeliveryController extends Controller
                 'notes' => $itemData['notes'] ?? null,
             ]);
         }
+    }
+
+    /**
+     * Get delivery options for form dropdowns
+     */
+    public function getDeliveryOptions()
+    {
+        return $this->success([
+            'delivery_types' => DeliveryType::options(),
+            'delivery_modes' => DeliveryMode::options(),
+            'delivery_statuses' => DeliveryStatus::options(),
+        ], 'Delivery options fetched successfully.');
     }
 }
 
