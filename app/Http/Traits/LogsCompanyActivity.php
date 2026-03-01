@@ -10,10 +10,10 @@ trait LogsCompanyActivity
     /**
      * Log activity for the authenticated company.
      */
-    protected function logActivity($action, $description, $subject = null, $properties = null)
+    protected function logActivity($action, $description, $subject = null, $properties = null): void
     {
         $companyUser = Auth::guard('company_user')->user();
-        
+
         if (!$companyUser) {
             return;
         }
@@ -44,7 +44,7 @@ trait LogsCompanyActivity
         $customerName = $delivery->customer ? $delivery->customer->name : 'Unknown Customer';
         $deliveryManName = $delivery->deliveryMan ? $delivery->deliveryMan->name : 'unassigned';
         $trackingNumber = $delivery->tracking_number ?? 'Unknown';
-        
+
         $descriptions = [
             'delivery_created' => "New delivery {$trackingNumber} created for {$customerName}",
             'delivery_assigned' => "Delivery {$trackingNumber} assigned to {$deliveryManName}",
@@ -64,7 +64,7 @@ trait LogsCompanyActivity
     protected function logCustomerActivity($action, $customer, $description = null)
     {
         $customerName = $customer ? $customer->name : 'Unknown Customer';
-        
+
         $descriptions = [
             'customer_created' => "New customer created: {$customerName}",
             'customer_updated' => "Customer {$customerName} updated",
@@ -82,7 +82,7 @@ trait LogsCompanyActivity
     protected function logDeliveryManActivity($action, $deliveryMan, $description = null)
     {
         $deliveryManName = $deliveryMan ? $deliveryMan->name : 'Unknown Delivery Man';
-        
+
         $descriptions = [
             'delivery_man_linked' => "Delivery man {$deliveryManName} linked to company",
             'delivery_man_unlinked' => "Delivery man {$deliveryManName} unlinked from company",

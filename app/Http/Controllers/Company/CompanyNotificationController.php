@@ -10,7 +10,7 @@ use App\Models\CompanyUser;
 
 class CompanyNotificationController extends Controller
 {
-    protected $fcmService;
+    protected FcmService $fcmService;
 
     public function __construct(FcmService $fcmService)
     {
@@ -171,7 +171,7 @@ class CompanyNotificationController extends Controller
 
         try {
             $tokens = $users->pluck('device_token')->toArray();
-            
+
             $results = $this->fcmService->sendToMany(
                 $tokens,
                 $request->title,
@@ -209,7 +209,7 @@ class CompanyNotificationController extends Controller
     public function getCompanyUsers()
     {
         $company = Auth::guard('company_user')->user()->company;
-        
+
         $users = CompanyUser::where('company_id', $company->id)
             ->select('id', 'name', 'email', 'role', 'device_token', 'created_at')
             ->get()

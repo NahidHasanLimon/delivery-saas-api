@@ -3,6 +3,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DeliveryMan\DeliveryManAuthController;
+use App\Http\Controllers\DeliveryMan\DeliveryManInvitationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,4 +25,7 @@ Route::middleware('api')->group(function () {
 
     // Delivery-man auth
     Route::prefix('delivery-man')->group(base_path('routes/deliveryman.php'));
+
+    // Delivery-man invitation verification
+    Route::post('delivery-men/invitations/{invite_id}/verify', [DeliveryManInvitationController::class, 'verify']);
 });

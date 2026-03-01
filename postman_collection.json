@@ -1,0 +1,711 @@
+{
+  "info": {
+    "name": "Delivery SaaS API - Full Collection",
+    "_postman_id": "2f4f9f53-9c20-4b72-99bb-7bf8f18a9c10",
+    "description": "All API routes from routes/api.php (company + delivery-man).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Company Auth",
+      "item": [
+        {
+          "name": "Company Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{companyEmail}}\",\n  \"password\": \"{{companyPassword}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/company/login", "host": ["{{baseUrl}}"], "path": ["api", "company", "login"] }
+          }
+        },
+        {
+          "name": "Company Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/company/refresh", "host": ["{{baseUrl}}"], "path": ["api", "company", "refresh"] }
+          }
+        },
+        {
+          "name": "Company Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/company/me", "host": ["{{baseUrl}}"], "path": ["api", "company", "me"] }
+          }
+        },
+        {
+          "name": "Company Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/company/logout", "host": ["{{baseUrl}}"], "path": ["api", "company", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Company Delivery Men",
+      "item": [
+        {
+          "name": "List Delivery Men",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/company/deliverymen", "host": ["{{baseUrl}}"], "path": ["api", "company", "deliverymen"] }
+          }
+        },
+        {
+          "name": "Create Delivery Man (Store)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Rider\",\n  \"email\": \"rider@example.com\",\n  \"mobile_no\": \"01700000000\",\n  \"send_otp\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/company/deliverymen", "host": ["{{baseUrl}}"], "path": ["api", "company", "deliverymen"] }
+          }
+        },
+        {
+          "name": "Invite Delivery Man",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Rider\",\n  \"email\": \"rider@example.com\",\n  \"mobile_no\": \"01700000000\",\n  \"send_otp\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/company/deliverymen/invite", "host": ["{{baseUrl}}"], "path": ["api", "company", "deliverymen", "invite"] }
+          }
+        },
+        {
+          "name": "Unlink Delivery Man",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/company/deliverymen/{{deliveryManId}}", "host": ["{{baseUrl}}"], "path": ["api", "company", "deliverymen", "{{deliveryManId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Company Deliveries",
+      "item": [
+        {
+          "name": "List Deliveries",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/company/deliveries?page=1&per_page=15&status=&delivery_type=&delivery_mode=&tracking_number=&customer_name=&customer_mobile=&from_date=&to_date=&sort_by=created_at&sort_order=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "company", "deliveries"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "15" },
+                { "key": "status", "value": "" },
+                { "key": "delivery_type", "value": "" },
+                { "key": "delivery_mode", "value": "" },
+                { "key": "tracking_number", "value": "" },
+                { "key": "customer_name", "value": "" },
+                { "key": "customer_mobile", "value": "" },
+                { "key": "from_date", "value": "" },
+                { "key": "to_date", "value": "" },
+                { "key": "sort_by", "value": "created_at" },
+                { "key": "sort_order", "value": "desc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Delivery",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_id\": 16,\n  \"pickup_label\": \"Warehouse A\",\n  \"pickup_address\": \"A Block, Mirpur 2, Level 6\",\n  \"drop_label\": \"Customer Home\",\n  \"drop_address\": \"A Block, Mirpur 2, Level 6\",\n  \"items\": [\n    {\n      \"id\": 11,\n      \"quantity\": 1,\n      \"notes\": \"some instruction\"\n    }\n  ],\n  \"delivery_type\": \"order\",\n  \"delivery_mode\": \"walk\",\n  \"expected_delivery_time\": null,\n  \"amount\": 199,\n  \"delivery_notes\": \"ok\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/company/deliveries", "host": ["{{baseUrl}}"], "path": ["api", "company", "deliveries"] }
+          }
+        },
+        {
+          "name": "Delivery Options",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/company/deliveries/options", "host": ["{{baseUrl}}"], "path": ["api", "company", "deliveries", "options"] }
+          }
+        },
+        {
+          "name": "Show Delivery",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/company/deliveries/{{deliveryId}}", "host": ["{{baseUrl}}"], "path": ["api", "company", "deliveries", "{{deliveryId}}"] }
+          }
+        },
+        {
+          "name": "Update Delivery",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"delivery_man_id\": null,\n  \"status\": \"cancelled\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/company/deliveries/{{deliveryId}}", "host": ["{{baseUrl}}"], "path": ["api", "company", "deliveries", "{{deliveryId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Company Customers",
+      "item": [
+        {
+          "name": "List Customers",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/company/customers?per_page=15",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "company", "customers"],
+              "query": [{ "key": "per_page", "value": "15" }]
+            }
+          }
+        },
+        {
+          "name": "Show Customer",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/company/customers/{{customerId}}", "host": ["{{baseUrl}}"], "path": ["api", "company", "customers", "{{customerId}}"] }
+          }
+        },
+        {
+          "name": "Create Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Customer One\",\n  \"mobile_no\": \"01800000000\",\n  \"email\": \"customer.one@example.com\",\n  \"address\": \"Dhaka\",\n  \"customer_code\": \"CUST-001\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/company/customers", "host": ["{{baseUrl}}"], "path": ["api", "company", "customers"] }
+          }
+        },
+        {
+          "name": "Update Customer",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Customer One Updated\",\n  \"mobile_no\": \"01800000000\",\n  \"email\": \"customer.one.updated@example.com\",\n  \"address\": \"Dhaka - Updated\",\n  \"customer_code\": \"CUST-001\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/company/customers/{{customerId}}", "host": ["{{baseUrl}}"], "path": ["api", "company", "customers", "{{customerId}}"] }
+          }
+        },
+        {
+          "name": "Delete Customer",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/company/customers/{{customerId}}", "host": ["{{baseUrl}}"], "path": ["api", "company", "customers", "{{customerId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer Addresses",
+      "item": [
+        {
+          "name": "List Customer Addresses",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/company/customers/{{customerId}}/addresses", "host": ["{{baseUrl}}"], "path": ["api", "company", "customers", "{{customerId}}", "addresses"] }
+          }
+        },
+        {
+          "name": "Create Customer Address",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address_type\": \"home\",\n  \"label\": \"Home\",\n  \"address\": \"A Block, Mirpur 2, Dhaka\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/company/customers/{{customerId}}/addresses", "host": ["{{baseUrl}}"], "path": ["api", "company", "customers", "{{customerId}}", "addresses"] }
+          }
+        },
+        {
+          "name": "Update Customer Address",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address_type\": \"office\",\n  \"label\": \"Office\",\n  \"address\": \"Banani, Dhaka\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/company/customers/{{customerId}}/addresses/{{addressId}}", "host": ["{{baseUrl}}"], "path": ["api", "company", "customers", "{{customerId}}", "addresses", "{{addressId}}"] }
+          }
+        },
+        {
+          "name": "Delete Customer Address",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/company/customers/{{customerId}}/addresses/{{addressId}}", "host": ["{{baseUrl}}"], "path": ["api", "company", "customers", "{{customerId}}", "addresses", "{{addressId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Company Items",
+      "item": [
+        {
+          "name": "List Items",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/company/items?active=true&search=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "company", "items"],
+              "query": [
+                { "key": "active", "value": "true" },
+                { "key": "search", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Box\",\n  \"code\": \"BOX-001\",\n  \"unit\": \"pcs\",\n  \"notes\": \"Fragile\",\n  \"is_active\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/company/items", "host": ["{{baseUrl}}"], "path": ["api", "company", "items"] }
+          }
+        },
+        {
+          "name": "Show Item",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/company/items/{{itemId}}", "host": ["{{baseUrl}}"], "path": ["api", "company", "items", "{{itemId}}"] }
+          }
+        },
+        {
+          "name": "Update Item",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Box Large\",\n  \"code\": \"BOX-001\",\n  \"unit\": \"pcs\",\n  \"notes\": \"Updated\",\n  \"is_active\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/company/items/{{itemId}}", "host": ["{{baseUrl}}"], "path": ["api", "company", "items", "{{itemId}}"] }
+          }
+        },
+        {
+          "name": "Delete Item",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/company/items/{{itemId}}", "host": ["{{baseUrl}}"], "path": ["api", "company", "items", "{{itemId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Company Addresses",
+      "item": [
+        {
+          "name": "List Company Addresses",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/company/addresses?type=&search=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "company", "addresses"],
+              "query": [
+                { "key": "type", "value": "" },
+                { "key": "search", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Company Address",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address_type\": \"warehouse\",\n  \"label\": \"Main Warehouse\",\n  \"address\": \"A Block, Mirpur 2, Dhaka\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/company/addresses", "host": ["{{baseUrl}}"], "path": ["api", "company", "addresses"] }
+          }
+        },
+        {
+          "name": "Show Company Address",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/company/addresses/{{addressId}}", "host": ["{{baseUrl}}"], "path": ["api", "company", "addresses", "{{addressId}}"] }
+          }
+        },
+        {
+          "name": "Update Company Address",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address_type\": \"office\",\n  \"label\": \"Head Office\",\n  \"address\": \"Banani, Dhaka\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/company/addresses/{{addressId}}", "host": ["{{baseUrl}}"], "path": ["api", "company", "addresses", "{{addressId}}"] }
+          }
+        },
+        {
+          "name": "Delete Company Address",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/company/addresses/{{addressId}}", "host": ["{{baseUrl}}"], "path": ["api", "company", "addresses", "{{addressId}}"] }
+          }
+        },
+        {
+          "name": "Get Company Addresses By Type",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/company/addresses/type/{{addressType}}", "host": ["{{baseUrl}}"], "path": ["api", "company", "addresses", "type", "{{addressType}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Company Notifications",
+      "item": [
+        {
+          "name": "Update Device Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"device_token\": \"YOUR_FCM_DEVICE_TOKEN\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/company/notifications/device-token", "host": ["{{baseUrl}}"], "path": ["api", "company", "notifications", "device-token"] }
+          }
+        },
+        {
+          "name": "Send Test Notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Test\",\n  \"message\": \"This is a test notification\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/company/notifications/test", "host": ["{{baseUrl}}"], "path": ["api", "company", "notifications", "test"] }
+          }
+        },
+        {
+          "name": "Send Notification To Company",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Announcement\",\n  \"message\": \"Company-wide message\",\n  \"data\": {\n    \"type\": \"general\"\n  }\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/company/notifications/company", "host": ["{{baseUrl}}"], "path": ["api", "company", "notifications", "company"] }
+          }
+        },
+        {
+          "name": "Send Notification To Users",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_ids\": [1, 2],\n  \"title\": \"Targeted\",\n  \"message\": \"Message for selected users\",\n  \"data\": {\n    \"priority\": \"high\"\n  }\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/company/notifications/users", "host": ["{{baseUrl}}"], "path": ["api", "company", "notifications", "users"] }
+          }
+        },
+        {
+          "name": "Get Company Users For Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/company/notifications/users", "host": ["{{baseUrl}}"], "path": ["api", "company", "notifications", "users"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Company Dashboard",
+      "item": [
+        {
+          "name": "Dashboard Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/company/dashboard", "host": ["{{baseUrl}}"], "path": ["api", "company", "dashboard"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delivery Man Auth",
+      "item": [
+        {
+          "name": "Delivery Man Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile_no\": \"{{deliveryManMobile}}\",\n  \"password\": \"{{deliveryManPassword}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/delivery-man/login", "host": ["{{baseUrl}}"], "path": ["api", "delivery-man", "login"] }
+          }
+        },
+        {
+          "name": "Delivery Man Activate",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile_no\": \"{{deliveryManMobile}}\",\n  \"otp_code\": \"123456\",\n  \"password\": \"secret123\",\n  \"password_confirmation\": \"secret123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/delivery-man/activate", "host": ["{{baseUrl}}"], "path": ["api", "delivery-man", "activate"] }
+          }
+        },
+        {
+          "name": "Request Password Reset OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"mobile_no\": \"{{deliveryManMobile}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/delivery-man/password/request-otp", "host": ["{{baseUrl}}"], "path": ["api", "delivery-man", "password", "request-otp"] }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile_no\": \"{{deliveryManMobile}}\",\n  \"otp_code\": \"123456\",\n  \"password\": \"newsecret123\",\n  \"password_confirmation\": \"newsecret123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/delivery-man/password/reset", "host": ["{{baseUrl}}"], "path": ["api", "delivery-man", "password", "reset"] }
+          }
+        },
+        {
+          "name": "Delivery Man Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{deliveryManToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/delivery-man/logout", "host": ["{{baseUrl}}"], "path": ["api", "delivery-man", "logout"] }
+          }
+        },
+        {
+          "name": "Delivery Man Refresh",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{deliveryManToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/delivery-man/refresh", "host": ["{{baseUrl}}"], "path": ["api", "delivery-man", "refresh"] }
+          }
+        },
+        {
+          "name": "Delivery Man Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{deliveryManToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/delivery-man/me", "host": ["{{baseUrl}}"], "path": ["api", "delivery-man", "me"] }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:9005" },
+    { "key": "companyEmail", "value": "company.user@example.com" },
+    { "key": "companyPassword", "value": "secret" },
+    { "key": "companyToken", "value": "" },
+    { "key": "deliveryManMobile", "value": "01700000000" },
+    { "key": "deliveryManPassword", "value": "secret123" },
+    { "key": "deliveryManToken", "value": "" },
+    { "key": "deliveryId", "value": "1" },
+    { "key": "deliveryManId", "value": "1" },
+    { "key": "customerId", "value": "1" },
+    { "key": "addressId", "value": "1" },
+    { "key": "itemId", "value": "1" },
+    { "key": "addressType", "value": "warehouse" }
+  ]
+}

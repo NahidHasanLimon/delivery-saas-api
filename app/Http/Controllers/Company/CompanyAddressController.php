@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Company;
 
 use App\Http\Controllers\Controller;
 use App\Http\Traits\LogsCompanyActivity;
+use App\Models\Delivery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Address;
@@ -18,16 +19,16 @@ class CompanyAddressController extends Controller
     public function index(Request $request)
     {
         $company = Auth::guard('company_user')->user()->company;
-        
+
         $query = $company->addresses()
             ->where('addressable_type', 'company')
             ->where('addressable_id', $company->id);
-        
+
         // Filter by address type if requested
         if ($request->has('type')) {
             $query->where('address_type', $request->type);
         }
-        
+
         // Search by label or address
         if ($request->has('search')) {
             $search = $request->search;
@@ -36,9 +37,9 @@ class CompanyAddressController extends Controller
                   ->orWhere('address', 'like', "%{$search}%");
             });
         }
-        
+
         $addresses = $query->orderBy('address_type')->orderBy('label')->get();
-        
+
         return $this->success($addresses, 'Company addresses fetched successfully.');
     }
 
@@ -48,7 +49,7 @@ class CompanyAddressController extends Controller
     public function store(Request $request)
     {
         $company = Auth::guard('company_user')->user()->company;
-        
+
         $request->validate([
             'address_type' => 'required|string|in:warehouse,pickup_point,office,distribution_center,store,other',
             'label' => 'required|string|max:255',
@@ -117,7 +118,7 @@ class CompanyAddressController extends Controller
             ->where('addressable_type', 'company')
             ->where('addressable_id', $company->id)
             ->findOrFail($id);
-        
+
         return $this->success($address, 'Company address fetched successfully.');
     }
 
@@ -127,7 +128,7 @@ class CompanyAddressController extends Controller
     public function update(Request $request, $id)
     {
         $company = Auth::guard('company_user')->user()->company;
-        
+
         $address = Address::where('company_id', $company->id)
             ->where('addressable_type', 'company')
             ->where('addressable_id', $company->id)
@@ -191,14 +192,14 @@ class CompanyAddressController extends Controller
     public function destroy($id)
     {
         $company = Auth::guard('company_user')->user()->company;
-        
+
         $address = Address::where('company_id', $company->id)
             ->where('addressable_type', 'company')
             ->where('addressable_id', $company->id)
             ->findOrFail($id);
 
         // Check if address is being used in any deliveries
-        $isUsedInDeliveries = \App\Models\Delivery::where('company_id', $company->id)
+        $isUsedInDeliveries = Delivery::where('company_id', $company->id)
             ->where(function($query) use ($address) {
                 $query->where('pickup_address_id', $address->id)
                       ->orWhere('drop_address_id', $address->id);
@@ -227,17 +228,17 @@ class CompanyAddressController extends Controller
     /**
      * Get addresses by type
      */
-    public function getByType($type)
+    public function getByType($type): \Illuminate\Http\JsonResponse
     {
         $company = Auth::guard('company_user')->user()->company;
-        
+
         $addresses = Address::where('company_id', $company->id)
             ->where('addressable_type', 'company')
             ->where('addressable_id', $company->id)
             ->where('address_type', $type)
             ->orderBy('label')
             ->get();
-        
+
         return $this->success($addresses, ucfirst($type) . ' addresses fetched successfully.');
     }
 }

@@ -12,12 +12,23 @@ class DeliveryMan extends Authenticatable implements JWTSubject
     use HasFactory;
       protected $hidden = ['password'];
 
-      protected $fillable = [
+    protected $fillable = [
         'name',
         'email',
         'mobile_no',
+        'identification_number',
         'password',
+        'status',
+        'invited_at',
+        'activated_at',
+        'last_login_at',
         // add other fields as needed
+    ];
+
+    protected $casts = [
+        'invited_at' => 'datetime',
+        'activated_at' => 'datetime',
+        'last_login_at' => 'datetime',
     ];
     // JWTSubject methods:
     public function getJWTIdentifier()

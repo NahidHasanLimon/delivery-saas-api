@@ -14,6 +14,7 @@ use App\Enums\DeliveryStatus;
 use App\Enums\DeliveryType;
 use App\Enums\DeliveryMode;
 use App\Rules\NoDuplicateItem;
+use Illuminate\Validation\Rule;
 
 class CompanyDeliveryController extends Controller
 {
@@ -22,12 +23,16 @@ class CompanyDeliveryController extends Controller
     public function index(Request $request)
     {
         $company = Auth::guard('company_user')->user()->company;
-        
+
         // Validate request parameters
         $request->validate([
             'page' => 'nullable|integer|min:1',
             'per_page' => 'nullable|integer|min:1|max:100',
-            'delivery_man_id' => 'nullable|exists:delivery_men,id',
+            'delivery_man_id' => [
+                'nullable',
+                Rule::exists('company_delivery_man', 'delivery_man_id')
+                    ->where(fn ($q) => $q->where('company_id', $company->id)),
+            ],
             'delivery_type' => 'nullable|string|in:' . implode(',', DeliveryType::values()),
             'delivery_mode' => 'nullable|string|in:' . implode(',', DeliveryMode::values()),
             'status' => 'nullable|string|in:' . implode(',', DeliveryStatus::values()),
@@ -104,7 +109,7 @@ class CompanyDeliveryController extends Controller
 
         // Replace the collection in pagination with formatted data
         $deliveries->setCollection($formattedDeliveries);
-        
+
         return $this->success([
             'deliveries' => $deliveries->items(),
             'pagination' => [
@@ -131,7 +136,7 @@ class CompanyDeliveryController extends Controller
             ]
         ], 'Deliveries fetched successfully.');
     }
-   
+
 
 
     // Create a delivery (with new or existing customer)
@@ -139,8 +144,16 @@ class CompanyDeliveryController extends Controller
     {
         $company = Auth::guard('company_user')->user()->company;
         $request->validate([
-            'delivery_man_id' => 'nullable|exists:delivery_men,id',
-            'customer_id'     => 'nullable|exists:customers,id',
+            'delivery_man_id' => [
+                'nullable',
+                Rule::exists('company_delivery_man', 'delivery_man_id')
+                    ->where(fn ($q) => $q->where('company_id', $company->id)),
+            ],
+            'customer_id'     => [
+                'nullable',
+                Rule::exists('customers', 'id')
+                    ->where(fn ($q) => $q->where('company_id', $company->id)),
+            ],
 
             // Customer creation fields (required when creating new customer - no customer_id provided)
             'customer_name'   => 'required_without:customer_id|string|max:255',
@@ -156,24 +169,41 @@ class CompanyDeliveryController extends Controller
             ],
 
             // Pickup address - either ID or manual input
-            'pickup_address_id' => 'nullable|exists:addresses,id',
+            'pickup_address_id' => [
+                'nullable',
+                Rule::exists('addresses', 'id')
+                    ->where(fn ($q) => $q->where('company_id', $company->id)),
+            ],
             'pickup_label'      => 'required_without:pickup_address_id|string',
             'pickup_address'    => 'required_without:pickup_address_id|string',
+            'pickup_latitude'   => 'nullable|numeric|between:-90,90',
+            'pickup_longitude'  => 'nullable|numeric|between:-180,180',
 
             // Drop address - either ID or manual input
-            'drop_address_id'   => 'nullable|exists:addresses,id',
+            'drop_address_id'   => [
+                'nullable',
+                Rule::exists('addresses', 'id')
+                    ->where(fn ($q) => $q->where('company_id', $company->id)),
+            ],
             'drop_label'        => 'required_without:drop_address_id|string',
             'drop_address'      => 'required_without:drop_address_id|string',
+            'drop_latitude'     => 'nullable|numeric|between:-90,90',
+            'drop_longitude'    => 'nullable|numeric|between:-180,180',
 
             'delivery_notes'  => 'nullable|string',
             'delivery_type'   => 'nullable|string|in:' . implode(',', DeliveryType::values()),
             'expected_delivery_time' => 'nullable|date',
             'delivery_mode'   => 'nullable|string|in:' . implode(',', DeliveryMode::values()),
+            'status'          => 'nullable|string|in:' . implode(',', DeliveryStatus::values()),
             'amount'          => 'nullable|numeric|min:0',
 
             // Items for delivery
             'items' => ['nullable', 'array', new NoDuplicateItem],
-            'items.*.id' => 'nullable|exists:items,id',
+            'items.*.id' => [
+                'nullable',
+                Rule::exists('items', 'id')
+                    ->where(fn ($q) => $q->where('company_id', $company->id)),
+            ],
             'items.*.name' => [
                 'required_without:items.*.id',
                 'string',
@@ -219,39 +249,48 @@ class CompanyDeliveryController extends Controller
 
         // Handle pickup address
         $pickupData = $this->handleAddress($request, 'pickup', $company->id);
-        
-        // Handle drop address  
+
+        // Handle drop address
         $dropData = $this->handleAddress($request, 'drop', $company->id);
+
+        $status = $request->status ?? ($request->delivery_man_id ? DeliveryStatus::ASSIGNED->value : DeliveryStatus::PENDING->value);
+
+        if ($status === DeliveryStatus::ASSIGNED->value && ! $request->delivery_man_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'delivery_man_id is required when status is assigned.',
+            ], 422);
+        }
 
         $delivery = Delivery::create([
             'company_id'      => $company->id,
             'delivery_man_id' => $request->delivery_man_id,
             'customer_id'     => $customer->id,
-            
+
             // Pickup address data
             'pickup_address_id' => $pickupData['address_id'],
             'pickup_label'      => $pickupData['label'],
             'pickup_address'    => $pickupData['address'],
             'pickup_latitude'   => $pickupData['latitude'],
             'pickup_longitude'  => $pickupData['longitude'],
-            
+
             // Drop address data
             'drop_address_id'   => $dropData['address_id'],
             'drop_label'        => $dropData['label'],
             'drop_address'      => $dropData['address'],
             'drop_latitude'     => $dropData['latitude'],
             'drop_longitude'    => $dropData['longitude'],
-            
+
             'delivery_notes'  => $request->delivery_notes,
             'delivery_type'   => $request->delivery_type,
             'expected_delivery_time' => $request->expected_delivery_time,
             'delivery_mode'   => $request->delivery_mode,
             'amount'          => $request->amount,
-            
-            // Set assigned_at only if delivery man is assigned during creation
-            'assigned_at'     => $request->delivery_man_id ? now() : null,
-            // Status will be 'assigned' if delivery man provided, otherwise 'pending'
-            'status'          => $request->delivery_man_id ? DeliveryStatus::ASSIGNED->value : DeliveryStatus::PENDING->value,
+
+            // Timestamps derived from the effective creation status.
+            'assigned_at'     => $status === DeliveryStatus::ASSIGNED->value ? now() : null,
+            'delivered_at'    => $status === DeliveryStatus::DELIVERED->value ? now() : null,
+            'status'          => $status,
         ]);
 
         // Handle delivery items
@@ -275,11 +314,11 @@ class CompanyDeliveryController extends Controller
     {
         $company = Auth::guard('company_user')->user()->company;
         $delivery = $company->deliveries()->with(['customer', 'deliveryMan', 'items'])->findOrFail($id);
-        
+
         // Format response with clean items structure
         $response = $delivery->toArray();
         $response['items'] = $delivery->formatted_items;
-        
+
         return $this->success($response, 'Delivery fetched.');
     }
 
@@ -288,10 +327,14 @@ class CompanyDeliveryController extends Controller
     {
         $company = Auth::guard('company_user')->user()->company;
         $delivery = $company->deliveries()->findOrFail($id);
-      
+
 
         $request->validate([
-            'delivery_man_id' => 'nullable|exists:delivery_men,id',
+            'delivery_man_id' => [
+                'nullable',
+                Rule::exists('company_delivery_man', 'delivery_man_id')
+                    ->where(fn ($q) => $q->where('company_id', $company->id)),
+            ],
             'status' => 'nullable|in:' . implode(',', DeliveryStatus::values()),
         ]);
 
@@ -308,19 +351,19 @@ class CompanyDeliveryController extends Controller
             if ($newStatus === DeliveryStatus::DELIVERED) {
                 $delivery->delivered_at = now();
             }
-            
+
             // Log status change activity
             $this->logDeliveryActivity('delivery_status_changed', $delivery->load(['customer', 'deliveryMan']));
         }
-        
+
         if ($request->has('delivery_man_id')) {
             $delivery->delivery_man_id = $request->delivery_man_id;
             $delivery->assigned_at = now();
-            
+
             // Log assignment activity
             $this->logDeliveryActivity('delivery_assigned', $delivery->load(['customer', 'deliveryMan']));
         }
-        
+
         $delivery->save();
 
         $delivery->load(['customer', 'deliveryMan']);
@@ -336,6 +379,8 @@ class CompanyDeliveryController extends Controller
         $addressIdField = $type . '_address_id';
         $labelField = $type . '_label';
         $addressField = $type . '_address';
+        $latitudeField = $type . '_latitude';
+        $longitudeField = $type . '_longitude';
 
         // If address ID is provided, fetch from saved addresses
         if ($request->has($addressIdField) && $request->$addressIdField) {
@@ -352,31 +397,15 @@ class CompanyDeliveryController extends Controller
             ];
         }
 
-        // Manual address input - geocode it
+        // Manual address input - latitude/longitude are provided by frontend.
         $address = $request->$addressField;
-        $latitude = null;
-        $longitude = null;
-
-        try {
-            $response = \Illuminate\Support\Facades\Http::get('https://nominatim.openstreetmap.org/search', [
-                'q' => $address,
-                'format' => 'json',
-                'limit' => 1
-            ]);
-            if ($response->successful() && isset($response[0])) {
-                $latitude = $response[0]['lat'] ?? null;
-                $longitude = $response[0]['lon'] ?? null;
-            }
-        } catch (\Exception $e) {
-            // Optionally log the error, but don't fail the request
-        }
 
         return [
             'address_id' => null,
             'label' => $request->$labelField,
             'address' => $address,
-            'latitude' => $latitude,
-            'longitude' => $longitude,
+            'latitude' => $request->$latitudeField,
+            'longitude' => $request->$longitudeField,
         ];
     }
 
@@ -417,7 +446,7 @@ class CompanyDeliveryController extends Controller
     /**
      * Get delivery options for form dropdowns
      */
-    public function getDeliveryOptions()
+    public function getDeliveryOptions(): \Illuminate\Http\JsonResponse
     {
         return $this->success([
             'delivery_types' => DeliveryType::options(),

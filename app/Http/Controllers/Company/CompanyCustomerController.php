@@ -15,9 +15,38 @@ class CompanyCustomerController extends Controller
     public function index(Request $request)
     {
         $company = Auth::guard('company_user')->user()->company;
-        $customers = Customer::where('company_id', $company->id)
+
+        $request->validate([
+            'page' => 'nullable|integer|min:1',
+            'per_page' => 'nullable|integer|min:1|max:100',
+            'name' => 'nullable|string|max:255',
+            'email' => 'nullable|string|max:255',
+            'mobile_no' => 'nullable|string|max:50',
+            'customer_code' => 'nullable|string|max:255',
+        ]);
+
+        $query = Customer::where('company_id', $company->id);
+
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . trim($request->name) . '%');
+        }
+
+        if ($request->filled('email')) {
+            $query->where('email', 'like', '%' . trim($request->email) . '%');
+        }
+
+        if ($request->filled('mobile_no')) {
+            $query->where('mobile_no', 'like', '%' . trim($request->mobile_no) . '%');
+        }
+
+        if ($request->filled('customer_code')) {
+            $query->where('customer_code', 'like', '%' . trim($request->customer_code) . '%');
+        }
+
+        $customers = $query
             ->orderByDesc('id')
             ->paginate($request->get('per_page', 15));
+
         return $this->success($customers, 'Customers fetched.');
     }
 

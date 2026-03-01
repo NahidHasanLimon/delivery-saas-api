@@ -9,6 +9,7 @@ use App\Http\Controllers\Company\CompanyDashboardController;
 use App\Http\Controllers\Company\CompanyItemController;
 use App\Http\Controllers\Company\CompanyNotificationController;
 use App\Http\Controllers\Company\CompanyAddressController;
+use App\Http\Controllers\Company\CompanyDeliveryManInvitationController;
 
 Route::prefix('/')->group(function () {
     // Public
@@ -24,7 +25,12 @@ Route::prefix('/')->group(function () {
         // Delivery man management
         Route::get('deliverymen', [CompanyDeliveryManController::class, 'index']);
         Route::post('deliverymen', [CompanyDeliveryManController::class, 'store']);
+        Route::post('deliverymen/invite', [CompanyDeliveryManController::class, 'invite']);
         Route::delete('deliverymen/{id}', [CompanyDeliveryManController::class, 'destroy']);
+        Route::delete('delivery-men/{id}', [CompanyDeliveryManController::class, 'destroy']);
+        Route::get('delivery-men/invitations', [CompanyDeliveryManInvitationController::class, 'index']);
+        Route::post('delivery-men/invitations', [CompanyDeliveryManInvitationController::class, 'store']);
+        Route::post('delivery-men/invitations/{inviteId}/resend', [CompanyDeliveryManInvitationController::class, 'resend']);
 
         // Delivery management
         Route::get('deliveries', [CompanyDeliveryController::class, 'index']);
