@@ -281,6 +281,7 @@ class CompanyOrderController extends Controller
             ],
             'items.*.name' => 'required_without:items.*.id|string|max:255',
             'items.*.unit' => 'nullable|string|max:64',
+            'items.*.unit_price' => 'nullable|numeric|min:0',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.notes' => 'nullable|string|max:255',
         ]);
@@ -331,6 +332,7 @@ class CompanyOrderController extends Controller
                         'company_id' => $company->id,
                         'name' => $itemData['name'],
                         'unit' => $itemData['unit'] ?? null,
+                        'unit_price' => $itemData['unit_price'] ?? 0,
                         'is_active' => true,
                     ]);
                 }
@@ -341,6 +343,7 @@ class CompanyOrderController extends Controller
                     'item_id' => $item->id,
                     'item_name' => $item->name,
                     'unit' => $item->unit,
+                    'unit_price' => $item->unit_price ?? 0,
                     'quantity' => $itemData['quantity'],
                     'notes' => $itemData['notes'] ?? null,
                 ]);
@@ -352,6 +355,25 @@ class CompanyOrderController extends Controller
         $order->load(['customer', 'orderItems.item']);
 
         return $this->success($order, 'Order created successfully.', 201);
+    }
+
+    public function show($id)
+    {
+        $company = Auth::guard('company_user')->user()->company;
+
+        $order = Order::query()
+            ->where('company_id', $company->id)
+            ->with([
+                'customer:id,name,mobile_no,email,customer_code,address',
+                'orderItems.item',
+            ])
+            ->find($id);
+
+        if (! $order) {
+            return $this->error('Order not found.', [], 404);
+        }
+
+        return $this->success($order, 'Order fetched successfully.');
     }
 
     private function generateOrderNumber(int $companyId): string

@@ -14,12 +14,14 @@ class Item extends Model
         'name',
         'code',
         'unit',
+        'unit_price',
         'notes',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'unit_price' => 'decimal:2',
     ];
 
     /**

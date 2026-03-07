@@ -12,6 +12,7 @@ class OrderItem extends Model
         'item_id',
         'item_name',
         'unit',
+        'unit_price',
         'quantity',
         'notes',
     ];
@@ -26,4 +27,3 @@ class OrderItem extends Model
         return $this->belongsTo(Item::class);
     }
 }
-

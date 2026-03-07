@@ -43,6 +43,7 @@ Route::prefix('/')->group(function () {
         Route::get('orders', [CompanyOrderController::class, 'index']);
         Route::get('orders/options', [CompanyOrderController::class, 'options']);
         Route::post('orders', [CompanyOrderController::class, 'store']);
+        Route::get('orders/{id}', [CompanyOrderController::class, 'show']);
 
         // Customer management routes
         Route::get('customers', [CompanyCustomerController::class, 'index']);
