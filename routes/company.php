@@ -10,6 +10,7 @@ use App\Http\Controllers\Company\CompanyItemController;
 use App\Http\Controllers\Company\CompanyNotificationController;
 use App\Http\Controllers\Company\CompanyAddressController;
 use App\Http\Controllers\Company\CompanyDeliveryManInvitationController;
+use App\Http\Controllers\Company\CompanyOrderController;
 
 Route::prefix('/')->group(function () {
     // Public
@@ -38,6 +39,10 @@ Route::prefix('/')->group(function () {
         Route::get('deliveries/options', [CompanyDeliveryController::class, 'getDeliveryOptions']);
         Route::get('deliveries/{id}', [CompanyDeliveryController::class, 'show']);
         Route::patch('deliveries/{id}', [CompanyDeliveryController::class, 'update']);
+       
+        Route::get('orders', [CompanyOrderController::class, 'index']);
+        Route::get('orders/options', [CompanyOrderController::class, 'options']);
+        Route::post('orders', [CompanyOrderController::class, 'store']);
 
         // Customer management routes
         Route::get('customers', [CompanyCustomerController::class, 'index']);
