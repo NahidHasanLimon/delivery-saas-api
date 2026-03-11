@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\Company;
 
-use App\Enums\OrderDeliveryMedium;
 use App\Enums\OrderDeliveryStatus;
 use App\Enums\OrderPaymentMethod;
 use App\Enums\OrderPaymentStatus;
+use App\Enums\OrderSource;
 use App\Enums\OrderStatus;
-use App\Enums\OrderType;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Item;
@@ -40,19 +39,23 @@ class CompanyOrderController extends Controller
                     'label' => 'Customer Code',
                     'hint' => 'Filter by customer code.',
                 ],
-                'order_type' => [
+                'needs_delivery' => [
                     'type' => 'select',
-                    'label' => 'Order Type',
-                    'hint' => 'Choose order category.',
+                    'label' => 'Needs Delivery',
+                    'hint' => 'Whether delivery details are required.',
                     'default' => '',
-                    'options' => array_merge([['label' => 'All', 'value' => '']], OrderType::options()),
+                    'options' => [
+                        ['label' => 'All', 'value' => ''],
+                        ['label' => 'Yes', 'value' => 1],
+                        ['label' => 'No', 'value' => 0],
+                    ],
                 ],
-                'delivery_medium' => [
+                'order_source' => [
                     'type' => 'select',
-                    'label' => 'Delivery Medium',
-                    'hint' => 'How delivery is handled.',
+                    'label' => 'Order Source',
+                    'hint' => 'Where the order came from.',
                     'default' => '',
-                    'options' => array_merge([['label' => 'All', 'value' => '']], OrderDeliveryMedium::options()),
+                    'options' => array_merge([['label' => 'All', 'value' => '']], OrderSource::options()),
                 ],
                 'status' => [
                     'type' => 'select',
@@ -125,8 +128,8 @@ class CompanyOrderController extends Controller
             'order_number' => 'nullable|string|max:64',
             'customer_mobile_no' => 'nullable|string|max:32',
             'customer_code' => 'nullable|string|max:255',
-            'order_type' => 'nullable|string|in:' . implode(',', OrderType::values()),
-            'delivery_medium' => 'nullable|string|in:' . implode(',', OrderDeliveryMedium::values()),
+            'needs_delivery' => 'nullable|boolean',
+            'order_source' => 'nullable|string|in:' . implode(',', OrderSource::values()),
             'status' => 'nullable|string|in:' . implode(',', OrderStatus::values()),
             'delivery_status' => 'nullable|string|in:' . implode(',', OrderDeliveryStatus::values()),
             'payment_method' => 'nullable|string|in:' . implode(',', OrderPaymentMethod::values()),
@@ -134,7 +137,7 @@ class CompanyOrderController extends Controller
             'delivery_mobile_number' => 'nullable|string|max:32',
             'from_date' => 'nullable|date',
             'to_date' => 'nullable|date|after_or_equal:from_date',
-            'sort_by' => 'nullable|string|in:id,order_number,created_at,updated_at,amount,paid_amount,collectible_amount,status,delivery_status,payment_status',
+            'sort_by' => 'nullable|string|in:id,order_number,created_at,updated_at,subtotal_amount,delivery_fee,adjustment_amount,total_amount,paid_amount,collectible_amount,status,delivery_status,payment_status',
             'sort_order' => 'nullable|string|in:asc,desc',
         ]);
 
@@ -157,11 +160,11 @@ class CompanyOrderController extends Controller
                 $q->where('customer_code', 'like', '%' . $customerCode . '%');
             });
         }
-        if ($request->filled('order_type')) {
-            $query->where('order_type', $request->order_type);
+        if ($request->filled('needs_delivery')) {
+            $query->where('needs_delivery', (bool) $request->needs_delivery);
         }
-        if ($request->filled('delivery_medium')) {
-            $query->where('delivery_medium', $request->delivery_medium);
+        if ($request->filled('order_source')) {
+            $query->where('order_source', $request->order_source);
         }
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -207,8 +210,8 @@ class CompanyOrderController extends Controller
                 'order_number' => $request->order_number,
                 'customer_mobile_no' => $request->customer_mobile_no,
                 'customer_code' => $request->customer_code,
-                'order_type' => $request->order_type,
-                'delivery_medium' => $request->delivery_medium,
+                'needs_delivery' => $request->needs_delivery,
+                'order_source' => $request->order_source,
                 'status' => $request->status,
                 'delivery_status' => $request->delivery_status,
                 'payment_method' => $request->payment_method,
@@ -248,11 +251,11 @@ class CompanyOrderController extends Controller
                 'unique:customers,email,NULL,id,company_id,' . $company->id,
             ],
 
-            'order_type' => 'required|string|in:' . implode(',', OrderType::values()),
-            'delivery_medium' => 'nullable|string|in:' . implode(',', OrderDeliveryMedium::values()),
+            'needs_delivery' => 'required|boolean',
+            'order_source' => 'nullable|string|in:' . implode(',', OrderSource::values()),
             'status' => 'required|string|in:' . implode(',', OrderStatus::values()),
             'delivery_status' => [
-                'required_unless:order_type,' . OrderType::COUNTER->value,
+                Rule::requiredIf((bool) $request->input('needs_delivery')),
                 'nullable',
                 'string',
                 'in:' . implode(',', OrderDeliveryStatus::values()),
@@ -260,12 +263,17 @@ class CompanyOrderController extends Controller
 
             'delivery_contact_name' => 'nullable|string|max:128',
             'delivery_mobile_number' => 'nullable|string|max:32',
-            'delivery_address' => 'nullable|string',
+            'delivery_address' => [
+                Rule::requiredIf((bool) $request->input('needs_delivery')),
+                'nullable',
+                'string',
+            ],
             'delivery_area' => 'nullable|string|max:128',
             'delivery_latitude' => 'nullable|numeric|between:-90,90',
             'delivery_longitude' => 'nullable|numeric|between:-180,180',
 
-            'amount' => 'nullable|numeric|min:0',
+            'delivery_fee' => 'nullable|numeric|min:0',
+            'adjustment_amount' => 'nullable|numeric',
             'payment_method' => 'required|string|in:' . implode(',', OrderPaymentMethod::values()),
             'payment_status' => 'required|string|in:' . implode(',', OrderPaymentStatus::values()),
             'paid_amount' => 'nullable|numeric|min:0',
@@ -273,11 +281,6 @@ class CompanyOrderController extends Controller
 
             'note' => 'nullable|string|max:255',
             'internal_note' => 'nullable|string|max:255',
-
-            'assigned_delivery_man_id' => [
-                'nullable',
-                Rule::exists('company_delivery_man', 'delivery_man_id')->where(fn ($q) => $q->where('company_id', $company->id)),
-            ],
 
             'items' => 'required|array|min:1',
             'items.*.id' => [
@@ -303,54 +306,50 @@ class CompanyOrderController extends Controller
                 ]);
             }
 
+            $preparedItems = $this->prepareOrderItems($request->items, $company->id);
+            $subtotalAmount = collect($preparedItems)->sum('line_total');
+            $deliveryFee = round((float) ($request->delivery_fee ?? 0), 2);
+            $adjustmentAmount = round((float) ($request->adjustment_amount ?? 0), 2);
+            $totalAmount = round($subtotalAmount + $deliveryFee + $adjustmentAmount, 2);
+
             $order = Order::create([
                 'company_id' => $company->id,
                 'order_number' => $request->order_number ?: $this->generateOrderNumber($company->id),
                 'customer_id' => $customer->id,
-                'order_type' => $request->order_type,
-                'delivery_medium' => $request->delivery_medium,
+                'needs_delivery' => (bool) $request->needs_delivery,
+                'order_source' => $request->order_source,
                 'status' => $request->status,
-                'delivery_status' => $request->order_type === OrderType::COUNTER->value ? null : $request->delivery_status,
-                'delivery_contact_name' => $request->delivery_contact_name,
-                'delivery_mobile_number' => $request->delivery_mobile_number,
-                'delivery_address' => $request->delivery_address,
-                'delivery_area' => $request->delivery_area,
-                'delivery_latitude' => $request->delivery_latitude,
-                'delivery_longitude' => $request->delivery_longitude,
-                'amount' => $request->amount ?? 0,
+                'delivery_status' => $request->needs_delivery ? $request->delivery_status : null,
+                'delivery_contact_name' => $request->needs_delivery ? $request->delivery_contact_name : null,
+                'delivery_mobile_number' => $request->needs_delivery ? $request->delivery_mobile_number : null,
+                'delivery_address' => $request->needs_delivery ? $request->delivery_address : null,
+                'delivery_area' => $request->needs_delivery ? $request->delivery_area : null,
+                'delivery_latitude' => $request->needs_delivery ? $request->delivery_latitude : null,
+                'delivery_longitude' => $request->needs_delivery ? $request->delivery_longitude : null,
+                'subtotal_amount' => $subtotalAmount,
+                'delivery_fee' => $deliveryFee,
+                'adjustment_amount' => $adjustmentAmount,
+                'total_amount' => $totalAmount,
                 'payment_method' => $request->payment_method,
                 'payment_status' => $request->payment_status,
                 'paid_amount' => $request->paid_amount ?? 0,
-                'collectible_amount' => $request->collectible_amount ?? 0,
+                'collectible_amount' => $request->collectible_amount ?? $totalAmount,
                 'note' => $request->note,
                 'internal_note' => $request->internal_note,
-                'assigned_delivery_man_id' => $request->assigned_delivery_man_id,
                 'created_by' => $companyUser->id,
                 'updated_by' => $companyUser->id,
             ]);
 
-            foreach ($request->items as $itemData) {
-                if (! empty($itemData['id'])) {
-                    $item = Item::where('company_id', $company->id)->findOrFail($itemData['id']);
-                } else {
-                    $item = Item::create([
-                        'company_id' => $company->id,
-                        'name' => $itemData['name'],
-                        'unit' => $itemData['unit'] ?? null,
-                        'unit_price' => $itemData['unit_price'] ?? 0,
-                        'is_active' => true,
-                    ]);
-                }
-
+            foreach ($preparedItems as $preparedItem) {
                 OrderItem::create([
                     'company_id' => $company->id,
                     'order_id' => $order->id,
-                    'item_id' => $item->id,
-                    'item_name' => $item->name,
-                    'unit' => $item->unit,
-                    'unit_price' => $item->unit_price ?? 0,
-                    'quantity' => $itemData['quantity'],
-                    'notes' => $itemData['notes'] ?? null,
+                    'item_id' => $preparedItem['item']->id,
+                    'item_name' => $preparedItem['item']->name,
+                    'unit' => $preparedItem['unit'],
+                    'unit_price' => $preparedItem['unit_price'],
+                    'quantity' => $preparedItem['quantity'],
+                    'notes' => $preparedItem['notes'],
                 ]);
             }
 
@@ -388,5 +387,34 @@ class CompanyOrderController extends Controller
         } while (Order::where('company_id', $companyId)->where('order_number', $candidate)->exists());
 
         return $candidate;
+    }
+
+    private function prepareOrderItems(array $items, int $companyId): array
+    {
+        return array_map(function (array $itemData) use ($companyId) {
+            if (! empty($itemData['id'])) {
+                $item = Item::where('company_id', $companyId)->findOrFail($itemData['id']);
+            } else {
+                $item = Item::create([
+                    'company_id' => $companyId,
+                    'name' => $itemData['name'],
+                    'unit' => $itemData['unit'] ?? null,
+                    'unit_price' => $itemData['unit_price'] ?? 0,
+                    'is_active' => true,
+                ]);
+            }
+
+            $unitPrice = round((float) ($itemData['unit_price'] ?? $item->unit_price ?? 0), 2);
+            $quantity = (int) $itemData['quantity'];
+
+            return [
+                'item' => $item,
+                'unit' => $itemData['unit'] ?? $item->unit,
+                'unit_price' => $unitPrice,
+                'quantity' => $quantity,
+                'line_total' => round($unitPrice * $quantity, 2),
+                'notes' => $itemData['notes'] ?? null,
+            ];
+        }, $items);
     }
 }

@@ -11,6 +11,7 @@ use App\Http\Controllers\Company\CompanyNotificationController;
 use App\Http\Controllers\Company\CompanyAddressController;
 use App\Http\Controllers\Company\CompanyDeliveryManInvitationController;
 use App\Http\Controllers\Company\CompanyOrderController;
+use App\Http\Controllers\Company\CompanyOrderDeliveryController;
 
 Route::prefix('/')->group(function () {
     // Public
@@ -43,6 +44,7 @@ Route::prefix('/')->group(function () {
         Route::get('orders', [CompanyOrderController::class, 'index']);
         Route::get('orders/options', [CompanyOrderController::class, 'options']);
         Route::post('orders', [CompanyOrderController::class, 'store']);
+        Route::post('orders/{orderId}/delivery', [CompanyOrderDeliveryController::class, 'store']);
         Route::get('orders/{id}', [CompanyOrderController::class, 'show']);
 
         // Customer management routes

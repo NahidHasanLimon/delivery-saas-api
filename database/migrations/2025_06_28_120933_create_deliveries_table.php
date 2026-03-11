@@ -39,7 +39,7 @@ return new class extends Migration
             $table->text('delivery_notes')->nullable();  // ✅ useful for internal or user instructions
             $table->string('delivery_type')->nullable(); // e.g., 'order', 'return', 'pickup'
             $table->timestamp('expected_delivery_time')->nullable(); // ✅ allows SLA / delivery windows
-            $table->string('delivery_mode')->nullable(); // e.g., 'bike', 'walk', 'van'
+            $table->string('delivery_method'); // manual, own, third_party
 
             $table->enum('status', ['pending', 'assigned', 'in_progress', 'delivered', 'cancelled'])->default('pending'); // ✅ core flow
 

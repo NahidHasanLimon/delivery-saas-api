@@ -13,12 +13,18 @@ class DeliveryItem extends Model
         'company_id',
         'delivery_id',
         'item_id',
+        'item_name',
+        'unit',
+        'unit_price',
         'quantity',
+        'line_total',
         'notes',
     ];
 
     protected $casts = [
+        'unit_price' => 'decimal:2',
         'quantity' => 'integer',
+        'line_total' => 'decimal:2',
     ];
 
     /**

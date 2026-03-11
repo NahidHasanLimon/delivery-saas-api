@@ -13,8 +13,8 @@ class Order extends Model
         'company_id',
         'order_number',
         'customer_id',
-        'order_type',
-        'delivery_medium',
+        'needs_delivery',
+        'order_source',
         'status',
         'delivery_status',
         'delivery_contact_name',
@@ -23,16 +23,31 @@ class Order extends Model
         'delivery_area',
         'delivery_latitude',
         'delivery_longitude',
-        'amount',
+        'subtotal_amount',
+        'delivery_fee',
+        'adjustment_amount',
+        'total_amount',
         'payment_method',
         'payment_status',
         'paid_amount',
         'collectible_amount',
         'note',
         'internal_note',
-        'assigned_delivery_man_id',
         'created_by',
         'updated_by',
+    ];
+
+    protected $casts = [
+        'needs_delivery' => 'boolean',
+        'subtotal_amount' => 'decimal:2',
+        'delivery_fee' => 'decimal:2',
+        'adjustment_amount' => 'decimal:2',
+        'total_amount' => 'decimal:2',
+        'paid_amount' => 'decimal:2',
+        'collectible_amount' => 'decimal:2',
+        'delivery_latitude' => 'decimal:7',
+        'delivery_longitude' => 'decimal:7',
+        'deleted_at' => 'datetime',
     ];
 
     public function customer()
@@ -43,5 +58,10 @@ class Order extends Model
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function deliveries()
+    {
+        return $this->hasMany(Delivery::class);
     }
 }

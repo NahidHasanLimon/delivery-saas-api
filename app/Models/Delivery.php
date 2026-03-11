@@ -8,6 +8,8 @@ class Delivery extends Model
 {
     protected $fillable = [
         'company_id',
+        'order_id',
+        'delivery_source',
         'delivery_man_id',
         'customer_id',
         'tracking_number',
@@ -27,14 +29,17 @@ class Delivery extends Model
         'drop_longitude',
         
         'delivery_notes',
-        'delivery_type',
         'expected_delivery_time',
-        'delivery_mode',
+        'delivery_method',
+        'provider_name',
         'status',
         'assigned_at',
+        'picked_at',
         'delivered_at',
+        'cancelled_at',
         'in_progress_at',
-        'amount',
+        'collectible_amount',
+        'collected_amount',
     ];
 
     protected static function boot()
@@ -74,6 +79,11 @@ class Delivery extends Model
         return $this->belongsTo(\App\Models\Customer::class, 'customer_id');
     }
 
+    public function order()
+    {
+        return $this->belongsTo(\App\Models\Order::class, 'order_id');
+    }
+
     public function deliveryMan()
     {
         return $this->belongsTo(\App\Models\DeliveryMan::class, 'delivery_man_id');
@@ -108,7 +118,7 @@ class Delivery extends Model
     public function items()
     {
         return $this->belongsToMany(Item::class, 'delivery_items')
-                    ->withPivot('quantity', 'notes')
+                    ->withPivot('item_name', 'unit', 'unit_price', 'quantity', 'line_total', 'notes')
                     ->withTimestamps();
     }
 
@@ -117,15 +127,15 @@ class Delivery extends Model
      */
     public function getFormattedItemsAttribute()
     {
-        return $this->items->map(function ($item) {
+        return $this->deliveryItems->map(function ($deliveryItem) {
             return [
-                'item_id' => $item->id,
-                'name' => $item->name,
-                'code' => $item->code,
-                'unit' => $item->unit,
-                'quantity' => $item->pivot->quantity,
-                'notes' => $item->pivot->notes,
-                'item_notes' => $item->notes, // Original item notes
+                'item_id' => $deliveryItem->item_id,
+                'name' => $deliveryItem->item_name,
+                'unit' => $deliveryItem->unit,
+                'unit_price' => $deliveryItem->unit_price,
+                'quantity' => $deliveryItem->quantity,
+                'line_total' => $deliveryItem->line_total,
+                'notes' => $deliveryItem->notes,
             ];
         });
     }

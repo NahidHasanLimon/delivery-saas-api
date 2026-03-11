@@ -31,11 +31,11 @@ class CompanyDashboardController extends Controller
             ->pluck('count', 'status')
             ->toArray();
 
-        // Get today's delivered deliveries and revenue in a single query
+        // Get today's delivered deliveries and collected cash in a single query
         $todayStats = $company->deliveries()
             ->where('status', DeliveryStatus::DELIVERED)
             ->whereDate('delivered_at', $today)
-            ->selectRaw('COUNT(*) as delivered_today, COALESCE(SUM(amount), 0) as revenue')
+            ->selectRaw('COUNT(*) as delivered_today, COALESCE(SUM(collected_amount), 0) as collected_today')
             ->first();
 
         // Recent deliveries (last 5)
@@ -64,7 +64,7 @@ class CompanyDashboardController extends Controller
                     'cancelled' => $deliveryStatusCounts[DeliveryStatus::CANCELLED->value] ?? 0,
                 ],
                 'delivered_today' => $todayStats->delivered_today ?? 0,
-                'revenue_today' => $todayStats->revenue ?? 0,
+                'collected_today' => $todayStats->collected_today ?? 0,
             ],
             'recent_deliveries' => $recentDeliveries,
             'recent_activity' => $recentActivity,

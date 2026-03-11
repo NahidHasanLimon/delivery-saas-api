@@ -46,7 +46,7 @@ class Item extends Model
     public function deliveries()
     {
         return $this->belongsToMany(Delivery::class, 'delivery_items')
-                    ->withPivot('quantity', 'notes')
+                    ->withPivot('item_name', 'unit', 'unit_price', 'quantity', 'line_total', 'notes')
                     ->withTimestamps();
     }
 
