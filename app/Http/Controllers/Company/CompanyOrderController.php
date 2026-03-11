@@ -82,10 +82,10 @@ class CompanyOrderController extends Controller
                     'default' => '',
                     'options' => array_merge([['label' => 'All', 'value' => '']], OrderPaymentStatus::options()),
                 ],
-                'drop_mobile_number' => [
+                'delivery_mobile_number' => [
                     'type' => 'text',
                     'label' => 'Recipient Mobile',
-                    'hint' => 'Filter by drop-off contact mobile.',
+                    'hint' => 'Filter by delivery contact mobile.',
                 ],
                 'from_date' => [
                     'type' => 'date',
@@ -131,7 +131,7 @@ class CompanyOrderController extends Controller
             'delivery_status' => 'nullable|string|in:' . implode(',', OrderDeliveryStatus::values()),
             'payment_method' => 'nullable|string|in:' . implode(',', OrderPaymentMethod::values()),
             'payment_status' => 'nullable|string|in:' . implode(',', OrderPaymentStatus::values()),
-            'drop_mobile_number' => 'nullable|string|max:32',
+            'delivery_mobile_number' => 'nullable|string|max:32',
             'from_date' => 'nullable|date',
             'to_date' => 'nullable|date|after_or_equal:from_date',
             'sort_by' => 'nullable|string|in:id,order_number,created_at,updated_at,amount,paid_amount,collectible_amount,status,delivery_status,payment_status',
@@ -175,8 +175,8 @@ class CompanyOrderController extends Controller
         if ($request->filled('payment_status')) {
             $query->where('payment_status', $request->payment_status);
         }
-        if ($request->filled('drop_mobile_number')) {
-            $query->where('drop_mobile_number', 'like', '%' . trim($request->drop_mobile_number) . '%');
+        if ($request->filled('delivery_mobile_number')) {
+            $query->where('delivery_mobile_number', 'like', '%' . trim($request->delivery_mobile_number) . '%');
         }
         if ($request->filled('from_date')) {
             $query->whereDate('created_at', '>=', $request->from_date);
@@ -213,7 +213,7 @@ class CompanyOrderController extends Controller
                 'delivery_status' => $request->delivery_status,
                 'payment_method' => $request->payment_method,
                 'payment_status' => $request->payment_status,
-                'drop_mobile_number' => $request->drop_mobile_number,
+                'delivery_mobile_number' => $request->delivery_mobile_number,
                 'from_date' => $request->from_date,
                 'to_date' => $request->to_date,
                 'sort_by' => $sortBy,
@@ -251,14 +251,19 @@ class CompanyOrderController extends Controller
             'order_type' => 'required|string|in:' . implode(',', OrderType::values()),
             'delivery_medium' => 'nullable|string|in:' . implode(',', OrderDeliveryMedium::values()),
             'status' => 'required|string|in:' . implode(',', OrderStatus::values()),
-            'delivery_status' => 'nullable|string|in:' . implode(',', OrderDeliveryStatus::values()),
+            'delivery_status' => [
+                'required_unless:order_type,' . OrderType::COUNTER->value,
+                'nullable',
+                'string',
+                'in:' . implode(',', OrderDeliveryStatus::values()),
+            ],
 
-            'drop_contact_name' => 'nullable|string|max:128',
-            'drop_mobile_number' => 'nullable|string|max:32',
-            'drop_address' => 'nullable|string',
-            'drop_area' => 'nullable|string|max:128',
-            'drop_latitude' => 'nullable|numeric|between:-90,90',
-            'drop_longitude' => 'nullable|numeric|between:-180,180',
+            'delivery_contact_name' => 'nullable|string|max:128',
+            'delivery_mobile_number' => 'nullable|string|max:32',
+            'delivery_address' => 'nullable|string',
+            'delivery_area' => 'nullable|string|max:128',
+            'delivery_latitude' => 'nullable|numeric|between:-90,90',
+            'delivery_longitude' => 'nullable|numeric|between:-180,180',
 
             'amount' => 'nullable|numeric|min:0',
             'payment_method' => 'required|string|in:' . implode(',', OrderPaymentMethod::values()),
@@ -306,12 +311,12 @@ class CompanyOrderController extends Controller
                 'delivery_medium' => $request->delivery_medium,
                 'status' => $request->status,
                 'delivery_status' => $request->order_type === OrderType::COUNTER->value ? null : $request->delivery_status,
-                'drop_contact_name' => $request->drop_contact_name,
-                'drop_mobile_number' => $request->drop_mobile_number,
-                'drop_address' => $request->drop_address,
-                'drop_area' => $request->drop_area,
-                'drop_latitude' => $request->drop_latitude,
-                'drop_longitude' => $request->drop_longitude,
+                'delivery_contact_name' => $request->delivery_contact_name,
+                'delivery_mobile_number' => $request->delivery_mobile_number,
+                'delivery_address' => $request->delivery_address,
+                'delivery_area' => $request->delivery_area,
+                'delivery_latitude' => $request->delivery_latitude,
+                'delivery_longitude' => $request->delivery_longitude,
                 'amount' => $request->amount ?? 0,
                 'payment_method' => $request->payment_method,
                 'payment_status' => $request->payment_status,

@@ -19,12 +19,12 @@ return new class extends Migration
             $table->string('status', 32)->comment('Business order status such as new, confirmed, completed, cancelled, returned');
             $table->string('delivery_status', 32)->nullable()->comment('Delivery summary status such as pending, assigned, in_progress, delivered, failed');
 
-            $table->string('drop_contact_name', 128)->nullable()->comment('Recipient/contact person name at drop-off');
-            $table->string('drop_mobile_number', 32)->nullable()->comment('Recipient/contact mobile number');
-            $table->text('drop_address')->nullable()->comment('Drop-off address; nullable for counter orders');
-            $table->string('drop_area', 128)->nullable()->comment('Drop-off area/thana/zone');
-            $table->decimal('drop_latitude', 10, 7)->nullable()->comment('Drop-off latitude');
-            $table->decimal('drop_longitude', 10, 7)->nullable()->comment('Drop-off longitude');
+            $table->string('delivery_contact_name', 128)->nullable()->comment('Recipient/contact person name at delivery');
+            $table->string('delivery_mobile_number', 32)->nullable()->comment('Recipient/contact mobile number');
+            $table->text('delivery_address')->nullable()->comment('Delivery address; nullable for counter orders');
+            $table->string('delivery_area', 128)->nullable()->comment('Delivery area/thana/zone');
+            $table->decimal('delivery_latitude', 10, 7)->nullable()->comment('Delivery latitude');
+            $table->decimal('delivery_longitude', 10, 7)->nullable()->comment('Delivery longitude');
 
             $table->decimal('amount', 12, 2)->default(0)->comment('Total order amount');
             $table->string('payment_method', 32)->comment('Payment method such as cash, online, cod');
@@ -61,4 +61,3 @@ return new class extends Migration
         Schema::dropIfExists('orders');
     }
 };
-
