@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Company;
 
 use App\Http\Controllers\Controller;
-use App\Models\CompanyDeliveryManInvite;
-use App\Models\DeliveryMan;
+use App\Models\CompanyRiderInvite;
+use App\Models\Rider;
 use App\Models\OTPVerification;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
@@ -12,7 +12,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
-class CompanyDeliveryManInvitationController extends Controller
+class CompanyRiderInvitationController extends Controller
 {
     public function index(Request $request)
     {
@@ -20,7 +20,7 @@ class CompanyDeliveryManInvitationController extends Controller
             'page' => 'nullable|integer|min:1',
             'per_page' => 'nullable|integer|min:1|max:100',
             'status' => 'nullable|string|in:pending,verified,expired,canceled',
-            'mobile_number' => 'nullable|string|max:20',
+            'mobile_number' => 'nullable|string|max:13',
             'from_date' => 'nullable|date',
             'to_date' => 'nullable|date|after_or_equal:from_date',
             'sort_by' => 'nullable|string|in:id,created_at,updated_at,status,mobile_number',
@@ -33,16 +33,16 @@ class CompanyDeliveryManInvitationController extends Controller
             return $this->error('Unauthorized company context.', [], 403);
         }
 
-        $query = CompanyDeliveryManInvite::query()
+        $query = CompanyRiderInvite::query()
             ->where('company_id', $company->id)
-            ->with(['deliveryMan:id,name,mobile_no,identification_number,status']);
+            ->with(['rider:id,name,mobile_no,identification_number,status']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
         if ($request->filled('mobile_number')) {
-            $query->where('mobile_number', 'like', '%' . trim($request->mobile_number) . '%');
+            $query->where('mobile_number', 'like', '%' . $this->normalizeRiderMobileNumber($request->mobile_number) . '%');
         }
 
         if ($request->filled('from_date')) {
@@ -79,18 +79,17 @@ class CompanyDeliveryManInvitationController extends Controller
                 'sort_by' => $sortBy,
                 'sort_order' => $sortOrder,
             ],
-        ], 'Delivery man invitations fetched successfully.');
+        ], 'Rider invitations fetched successfully.');
     }
 
     public function store(Request $request, SmsService $smsService)
     {
-        // Normalize common separators before validation.
-        $normalizedMobile = preg_replace('/[\s\-\(\)]/', '', (string) $request->input('mobile_number'));
+        // Canonical rider invite mobile format is 13 digits: 880 + local 10-digit number.
+        $normalizedMobile = $this->normalizeRiderMobileNumber($request->input('mobile_number'));
         $request->merge(['mobile_number' => $normalizedMobile]);
 
         $request->validate([
-            // E.164-like format: optional "+" followed by 8-15 digits.
-            'mobile_number' => ['required', 'regex:/^\+?[0-9]{8,15}$/'],
+            'mobile_number' => ['required', 'string', 'size:13', 'regex:/^880[0-9]{10}$/'],
         ]);
 
         $companyUser = Auth::guard('company_user')->user();
@@ -101,34 +100,34 @@ class CompanyDeliveryManInvitationController extends Controller
         }
 
         $mobileNumber = trim($request->mobile_number);
-        $deliveryMan = DeliveryMan::where('mobile_no', $mobileNumber)->first();
-        $latestInvite = CompanyDeliveryManInvite::query()
+        $rider = Rider::where('mobile_no', $mobileNumber)->first();
+        $latestInvite = CompanyRiderInvite::query()
             ->where('company_id', $company->id)
             ->where('mobile_number', $mobileNumber)
             ->latest('id')
             ->first();
 
         if ($latestInvite && $latestInvite->status === 'verified') {
-            $deliveryManId = $deliveryMan?->id ?? $latestInvite->delivery_man_id;
+            $riderId = $rider?->id ?? $latestInvite->rider_id;
 
-            if ($deliveryManId) {
-                if ($this->isActiveLinked($company->id, $deliveryManId)) {
-                    return $this->error('Delivery man is already in your company.', [], 422);
+            if ($riderId) {
+                if ($this->isActiveLinked($company->id, $riderId)) {
+                    return $this->error('Rider is already in your company.', [], 422);
                 }
 
-                $this->upsertCompanyDeliveryManLink($company->id, $deliveryManId);
+                $this->upsertCompanyRiderLink($company->id, $riderId);
 
                 return $this->success([
                     'invite_id' => $latestInvite->id,
-                    'delivery_man_id' => $deliveryManId,
+                    'rider_id' => $riderId,
                     'mobile_number' => $this->maskMobile($mobileNumber),
                     'linked' => true,
-                ], 'Delivery man linked to company.');
+                ], 'Rider linked to company.');
             }
         }
 
-        if ($deliveryMan && $this->isActiveLinked($company->id, $deliveryMan->id)) {
-            return $this->error('Delivery man is already in your company.', [], 422);
+        if ($rider && $this->isActiveLinked($company->id, $rider->id)) {
+            return $this->error('Rider is already in your company.', [], 422);
         }
 
         if ($latestInvite && $latestInvite->status === 'pending') {
@@ -142,10 +141,10 @@ class CompanyDeliveryManInvitationController extends Controller
                 422
             );
         } else {
-            $invite = CompanyDeliveryManInvite::create([
+            $invite = CompanyRiderInvite::create([
                 'company_id' => $company->id,
                 'mobile_number' => $mobileNumber,
-                'delivery_man_id' => $deliveryMan?->id,
+                'rider_id' => $rider?->id,
                 'status' => 'pending',
                 'created_by' => $companyUser->id,
             ]);
@@ -157,9 +156,9 @@ class CompanyDeliveryManInvitationController extends Controller
         OTPVerification::create([
             'mobile_no' => $mobileNumber,
             'otp_code' => hash('sha256', $otp),
-            'purpose' => 'company_delivery_invite',
+            'purpose' => 'company_rider_invite',
             'channel' => 'sms',
-            'user_type' => 'delivery_man',
+            'user_type' => 'rider',
             'ref_id_or_context_id' => $invite->id,
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
@@ -185,7 +184,7 @@ class CompanyDeliveryManInvitationController extends Controller
             return $this->error('Unauthorized company context.', [], 403);
         }
 
-        $invite = CompanyDeliveryManInvite::query()
+        $invite = CompanyRiderInvite::query()
             ->where('company_id', $company->id)
             ->find($inviteId);
 
@@ -203,9 +202,9 @@ class CompanyDeliveryManInvitationController extends Controller
         OTPVerification::create([
             'mobile_no' => $invite->mobile_number,
             'otp_code' => hash('sha256', $otp),
-            'purpose' => 'company_delivery_invite',
+            'purpose' => 'company_rider_invite',
             'channel' => 'sms',
-            'user_type' => 'delivery_man',
+            'user_type' => 'rider',
             'ref_id_or_context_id' => $invite->id,
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
@@ -222,26 +221,26 @@ class CompanyDeliveryManInvitationController extends Controller
         ], 'Invitation OTP resent successfully.');
     }
 
-    private function isActiveLinked(int $companyId, int $deliveryManId): bool
+    private function isActiveLinked(int $companyId, int $riderId): bool
     {
-        return DB::table('company_delivery_man')
+        return DB::table('company_rider')
             ->where('company_id', $companyId)
-            ->where('delivery_man_id', $deliveryManId)
+            ->where('rider_id', $riderId)
             ->where('status', 'active')
             ->exists();
     }
 
-    private function upsertCompanyDeliveryManLink(int $companyId, int $deliveryManId): void
+    private function upsertCompanyRiderLink(int $companyId, int $riderId): void
     {
-        $pivot = DB::table('company_delivery_man')
+        $pivot = DB::table('company_rider')
             ->where('company_id', $companyId)
-            ->where('delivery_man_id', $deliveryManId)
+            ->where('rider_id', $riderId)
             ->first();
 
         if ($pivot) {
-            DB::table('company_delivery_man')
+            DB::table('company_rider')
                 ->where('company_id', $companyId)
-                ->where('delivery_man_id', $deliveryManId)
+                ->where('rider_id', $riderId)
                 ->update([
                     'status' => 'active',
                     'updated_at' => Carbon::now(),
@@ -249,14 +248,29 @@ class CompanyDeliveryManInvitationController extends Controller
             return;
         }
 
-        DB::table('company_delivery_man')->insert([
+        DB::table('company_rider')->insert([
             'company_id' => $companyId,
-            'delivery_man_id' => $deliveryManId,
+            'rider_id' => $riderId,
             'status' => 'active',
             'joined_at' => Carbon::now(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ]);
+    }
+
+    private function normalizeRiderMobileNumber(?string $mobileNumber): string
+    {
+        $normalized = preg_replace('/[^0-9]/', '', (string) $mobileNumber);
+
+        if (strlen($normalized) === 10) {
+            return '880' . $normalized;
+        }
+
+        if (str_starts_with($normalized, '880') && strlen($normalized) === 13) {
+            return $normalized;
+        }
+
+        return $normalized;
     }
 
     private function maskMobile(string $mobile): string

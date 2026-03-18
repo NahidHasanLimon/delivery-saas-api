@@ -15,11 +15,11 @@ return new class extends Migration
             $table->id();
 
             $table->unsignedBigInteger('delivery_id')->index();
-            $table->enum('status', ['pending', 'assigned', 'in_progress', 'delivered', 'cancelled']);
+            $table->enum('status', ['pending', 'assigned', 'in_progress', 'delivered', 'returned', 'cancelled']);
 
             // Who triggered the change
             $table->unsignedBigInteger('changed_by_id')->nullable();
-            $table->string('changed_by_type')->nullable(); // e.g., 'CompanyUser', 'DeliveryMan', 'SystemAdmin'
+            $table->string('changed_by_type')->nullable(); // e.g., 'CompanyUser', 'Rider', 'SystemAdmin'
 
             // Optional reason/message for the status change
             $table->text('remarks')->nullable();

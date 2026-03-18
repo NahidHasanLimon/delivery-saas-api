@@ -8,6 +8,7 @@ enum OrderDeliveryStatus: string
     case ASSIGNED = 'assigned';
     case IN_PROGRESS = 'in_progress';
     case DELIVERED = 'delivered';
+    case RETURNED = 'returned';
     case FAILED = 'failed';
 
     public static function values(): array
@@ -22,8 +23,8 @@ enum OrderDeliveryStatus: string
             ['label' => 'Assigned', 'value' => self::ASSIGNED->value],
             ['label' => 'In Progress', 'value' => self::IN_PROGRESS->value],
             ['label' => 'Delivered', 'value' => self::DELIVERED->value],
+            ['label' => 'Returned', 'value' => self::RETURNED->value],
             ['label' => 'Failed', 'value' => self::FAILED->value],
         ];
     }
 }
-

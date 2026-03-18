@@ -13,7 +13,7 @@ class Order extends Model
         'company_id',
         'order_number',
         'customer_id',
-        'needs_delivery',
+        'is_delivery_order',
         'order_source',
         'status',
         'delivery_status',
@@ -38,7 +38,7 @@ class Order extends Model
     ];
 
     protected $casts = [
-        'needs_delivery' => 'boolean',
+        'is_delivery_order' => 'boolean',
         'subtotal_amount' => 'decimal:2',
         'delivery_fee' => 'decimal:2',
         'adjustment_amount' => 'decimal:2',

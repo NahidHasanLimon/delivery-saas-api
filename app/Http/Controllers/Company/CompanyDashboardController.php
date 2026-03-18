@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Collection;
 use App\Models\Delivery;
-use App\Models\DeliveryMan;
+use App\Models\Rider;
 use App\Models\Customer;
 use App\Models\CompanyActivityLog;
 use App\Enums\DeliveryStatus;
@@ -21,7 +21,7 @@ class CompanyDashboardController extends Controller
         $today = now()->toDateString();
 
         $totalDeliveries = $company->deliveries()->count();
-        $activeDeliverymen = $company->deliveryMen()->count();
+        $activeRiders = $company->riders()->count();
         $totalCustomers = $company->customers()->count();
         
         // Get all delivery status counts in a single query
@@ -40,7 +40,7 @@ class CompanyDashboardController extends Controller
 
         // Recent deliveries (last 5)
         $recentDeliveries = $company->deliveries()
-            ->with(['customer', 'deliveryMan'])
+            ->with(['customer', 'rider'])
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
@@ -48,19 +48,20 @@ class CompanyDashboardController extends Controller
         // Recent activity (based on delivery timestamps)
         $recentActivity = $this->getRecentActivity($company);
 
-        // Top performers (delivery men with most delivered deliveries this month)
+        // Top performers (riders with most delivered deliveries this month)
         $topPerformers = $this->getTopPerformers($company);
 
         return $this->success([
             'summary' => [
                 'total_deliveries' => $totalDeliveries,
-                'active_deliverymen' => $activeDeliverymen,
+                'active_riders' => $activeRiders,
                 'total_customers' => $totalCustomers,
                 'delivery_status_counts' => [
                     'pending' => $deliveryStatusCounts[DeliveryStatus::PENDING->value] ?? 0,
                     'assigned' => $deliveryStatusCounts[DeliveryStatus::ASSIGNED->value] ?? 0,
                     'in_progress' => $deliveryStatusCounts[DeliveryStatus::IN_PROGRESS->value] ?? 0,
                     'delivered' => $deliveryStatusCounts[DeliveryStatus::DELIVERED->value] ?? 0,
+                    'returned' => $deliveryStatusCounts[DeliveryStatus::RETURNED->value] ?? 0,
                     'cancelled' => $deliveryStatusCounts[DeliveryStatus::CANCELLED->value] ?? 0,
                 ],
                 'delivered_today' => $todayStats->delivered_today ?? 0,
@@ -95,18 +96,18 @@ class CompanyDashboardController extends Controller
     }
 
     /**
-     * Get top 3 performing delivery men
+     * Get top 3 performing riders
      */
     private function getTopPerformers($company)
     {
         $startOfMonth = now()->startOfMonth();
         
-        $topPerformers = $company->deliveryMen()
+        $topPerformers = $company->riders()
             ->withCount(['deliveries as delivered_deliveries' => function ($query) use ($startOfMonth) {
                 $query->where('status', DeliveryStatus::DELIVERED)
                       ->where('delivered_at', '>=', $startOfMonth);
             }])
-            ->having('delivered_deliveries', '>', 0) // Only get delivery men with actual deliveries
+            ->having('delivered_deliveries', '>', 0) // Only get riders with actual deliveries
             ->orderBy('delivered_deliveries', 'desc')
             ->limit(3)
             ->get();

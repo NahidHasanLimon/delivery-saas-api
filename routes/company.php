@@ -1,7 +1,7 @@
 <?php
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Company\CompanyUserAuthController;
-use App\Http\Controllers\Company\CompanyDeliveryManController;
+use App\Http\Controllers\Company\CompanyRiderController;
 use App\Http\Controllers\Company\CompanyDeliveryController;
 use App\Http\Controllers\Company\CompanyCustomerController;
 use App\Http\Controllers\Company\CompanyCustomerAddressController;
@@ -9,9 +9,10 @@ use App\Http\Controllers\Company\CompanyDashboardController;
 use App\Http\Controllers\Company\CompanyItemController;
 use App\Http\Controllers\Company\CompanyNotificationController;
 use App\Http\Controllers\Company\CompanyAddressController;
-use App\Http\Controllers\Company\CompanyDeliveryManInvitationController;
+use App\Http\Controllers\Company\CompanyRiderInvitationController;
 use App\Http\Controllers\Company\CompanyOrderController;
 use App\Http\Controllers\Company\CompanyOrderDeliveryController;
+use App\Http\Controllers\Company\CompanyDeliveryProviderController;
 
 Route::prefix('/')->group(function () {
     // Public
@@ -24,20 +25,20 @@ Route::prefix('/')->group(function () {
         Route::get('me',    [CompanyUserAuthController::class, 'me']);
         Route::post('logout', [CompanyUserAuthController::class, 'logout']);
 
-        // Delivery man management
-        Route::get('deliverymen', [CompanyDeliveryManController::class, 'index']);
-        Route::post('deliverymen', [CompanyDeliveryManController::class, 'store']);
-        Route::post('deliverymen/invite', [CompanyDeliveryManController::class, 'invite']);
-        Route::delete('deliverymen/{id}', [CompanyDeliveryManController::class, 'destroy']);
-        Route::delete('delivery-men/{id}', [CompanyDeliveryManController::class, 'destroy']);
-        Route::get('delivery-men/invitations', [CompanyDeliveryManInvitationController::class, 'index']);
-        Route::post('delivery-men/invitations', [CompanyDeliveryManInvitationController::class, 'store']);
-        Route::post('delivery-men/invitations/{inviteId}/resend', [CompanyDeliveryManInvitationController::class, 'resend']);
+        // Rider management
+        Route::get('riders', [CompanyRiderController::class, 'index']);
+        Route::get('riders/{id}', [CompanyRiderController::class, 'show']);
+        Route::post('riders', [CompanyRiderController::class, 'store']);
+        Route::delete('riders/{id}', [CompanyRiderController::class, 'destroy']);
+        Route::get('rider-invites', [CompanyRiderInvitationController::class, 'index']);
+        Route::post('rider-invites', [CompanyRiderInvitationController::class, 'store']);
+        Route::post('rider-invites/{inviteId}/resend', [CompanyRiderInvitationController::class, 'resend']);
 
         // Delivery management
         Route::get('deliveries', [CompanyDeliveryController::class, 'index']);
         Route::post('deliveries', [CompanyDeliveryController::class, 'store']);
         Route::get('deliveries/options', [CompanyDeliveryController::class, 'getDeliveryOptions']);
+        Route::get('delivery-providers', [CompanyDeliveryProviderController::class, 'index']);
         Route::get('deliveries/{id}', [CompanyDeliveryController::class, 'show']);
         Route::patch('deliveries/{id}', [CompanyDeliveryController::class, 'update']);
        

@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('delivery_men', function (Blueprint $table) {
+        Schema::table('riders', function (Blueprint $table) {
             $table->boolean('is_active')->default(false)->after('photo_url');
             $table->timestamp('invited_at')->nullable()->after('is_active');
             $table->timestamp('activated_at')->nullable()->after('invited_at');
@@ -18,7 +18,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('delivery_men', function (Blueprint $table) {
+        Schema::table('riders', function (Blueprint $table) {
             $table->dropColumn(['is_active', 'invited_at', 'activated_at', 'last_login_at']);
         });
     }

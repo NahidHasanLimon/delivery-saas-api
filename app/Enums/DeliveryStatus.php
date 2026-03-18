@@ -8,6 +8,7 @@ enum DeliveryStatus: string
     case ASSIGNED = 'assigned';
     case IN_PROGRESS = 'in_progress';
     case DELIVERED = 'delivered';
+    case RETURNED = 'returned';
     case CANCELLED = 'cancelled';
 
     public static function values(): array
@@ -25,6 +26,7 @@ enum DeliveryStatus: string
             ['label' => 'Assigned', 'value' => self::ASSIGNED->value],
             ['label' => 'In Progress', 'value' => self::IN_PROGRESS->value],
             ['label' => 'Delivered', 'value' => self::DELIVERED->value],
+            ['label' => 'Returned', 'value' => self::RETURNED->value],
             ['label' => 'Cancelled', 'value' => self::CANCELLED->value],
         ];
     }
@@ -35,7 +37,8 @@ enum DeliveryStatus: string
             self::PENDING => in_array($to, [self::ASSIGNED, self::IN_PROGRESS, self::DELIVERED, self::CANCELLED]),
             self::ASSIGNED => in_array($to, [self::IN_PROGRESS, self::DELIVERED, self::CANCELLED]),
             self::IN_PROGRESS => in_array($to, [self::DELIVERED, self::CANCELLED]),
-            self::DELIVERED, self::CANCELLED => false,
+            self::DELIVERED => in_array($to, [self::RETURNED]),
+            self::RETURNED, self::CANCELLED => false,
         };
     }
 }

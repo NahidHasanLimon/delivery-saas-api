@@ -7,7 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class DeliveryMan extends Authenticatable implements JWTSubject
+class Rider extends Authenticatable implements JWTSubject
 {
     use HasFactory;
       protected $hidden = ['password'];
@@ -42,7 +42,9 @@ class DeliveryMan extends Authenticatable implements JWTSubject
 
     public function companies()
     {
-        return $this->belongsToMany(\App\Models\Company::class, 'company_delivery_man');
+        return $this->belongsToMany(\App\Models\Company::class, 'company_rider')
+            ->withPivot(['status', 'joined_at'])
+            ->withTimestamps();
     }
 
     public function deliveries()

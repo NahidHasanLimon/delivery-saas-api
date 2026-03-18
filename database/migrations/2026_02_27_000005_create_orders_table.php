@@ -13,11 +13,11 @@ return new class extends Migration
             $table->unsignedBigInteger('company_id')->comment('Owning business/company id');
             $table->string('order_number', 64)->comment('Business-visible unique order number per company');
             $table->unsignedBigInteger('customer_id')->comment('Reference to customers table');
-            $table->boolean('needs_delivery')->default(false)->comment('1 if delivery details are needed, 0 otherwise');
+            $table->boolean('is_delivery_order')->default(false)->comment('1 if the order requires delivery, 0 otherwise');
             $table->string('order_source', 50)->nullable()->comment('counter, online_store, facebook, instagram, whatsapp, phone, other');
 
-            $table->string('status', 32)->comment('Business order status such as new, confirmed, completed, cancelled, returned');
-            $table->string('delivery_status', 32)->nullable()->comment('Delivery summary status such as pending, assigned, in_progress, delivered, failed');
+            $table->string('status', 32)->default('created')->comment('Business order status such as created, confirmed, completed, cancelled, returned');
+            $table->string('delivery_status', 32)->nullable()->comment('Delivery summary status such as pending, assigned, in_progress, delivered, returned, failed');
 
             $table->string('delivery_contact_name', 128)->nullable()->comment('Recipient/contact person name at delivery');
             $table->string('delivery_mobile_number', 32)->nullable()->comment('Recipient/contact mobile number');
@@ -47,7 +47,7 @@ return new class extends Migration
             $table->unique(['company_id', 'order_number'], 'uniq_company_order_number');
             $table->index('company_id', 'idx_orders_company_id');
             $table->index('customer_id', 'idx_orders_customer_id');
-            $table->index('needs_delivery', 'idx_orders_needs_delivery');
+            $table->index('is_delivery_order', 'idx_orders_is_delivery_order');
             $table->index('order_source', 'idx_orders_order_source');
             $table->index('status', 'idx_orders_status');
             $table->index('delivery_status', 'idx_orders_delivery_status');

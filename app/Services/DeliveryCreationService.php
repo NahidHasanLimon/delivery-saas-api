@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\DeliveryMethod;
 use App\Enums\DeliverySource;
 use App\Enums\DeliveryStatus;
+use App\Enums\OrderStatus;
 use App\Models\Address;
 use App\Models\Company;
 use App\Models\Customer;
@@ -17,12 +18,17 @@ use Illuminate\Validation\ValidationException;
 
 class DeliveryCreationService
 {
+    public function __construct(
+        private readonly DeliveryStatusTransitionService $deliveryStatusTransitionService
+    ) {
+    }
+
     public function createStandalone(Company $company, array $payload): Delivery
     {
-        $effectiveDeliveryManId = $payload['delivery_man_id'] ?? null;
-        $status = $this->resolveStatus($payload['status'] ?? null, $effectiveDeliveryManId);
+        $effectiveRiderId = $payload['rider_id'] ?? null;
+        $status = $this->resolveStatus($payload['status'] ?? null, $effectiveRiderId);
 
-        return DB::transaction(function () use ($company, $payload, $effectiveDeliveryManId, $status) {
+        return DB::transaction(function () use ($company, $payload, $effectiveRiderId, $status) {
             $customer = $this->resolveStandaloneCustomer($company->id, $payload);
             $pickupData = $this->resolveAddress($payload, 'pickup', $company->id);
             $dropData = $this->resolveAddress($payload, 'drop', $company->id);
@@ -35,13 +41,13 @@ class DeliveryCreationService
                 pickupData: $pickupData,
                 dropData: $dropData,
                 status: $status,
-                effectiveDeliveryManId: $effectiveDeliveryManId,
+                effectiveRiderId: $effectiveRiderId,
                 order: null,
             );
 
             $this->createStandaloneDeliveryItems($payload['items'] ?? [], $delivery, $company);
 
-            return $delivery->load(['customer', 'deliveryMan', 'order', 'deliveryItems']);
+            return $delivery->load(['customer', 'rider', 'order', 'deliveryItems']);
         });
     }
 
@@ -49,7 +55,7 @@ class DeliveryCreationService
     {
         $order->loadMissing('orderItems');
 
-        if (! $order->needs_delivery) {
+        if (! $order->is_delivery_order) {
             throw ValidationException::withMessages([
                 'order_id' => 'Selected order does not require delivery.',
             ]);
@@ -61,10 +67,19 @@ class DeliveryCreationService
             ]);
         }
 
-        $effectiveDeliveryManId = $payload['delivery_man_id'] ?? null;
-        $status = $this->resolveStatus($payload['status'] ?? null, $effectiveDeliveryManId);
+        if ($order->status === OrderStatus::COMPLETED->value) {
+            throw ValidationException::withMessages([
+                'order_id' => 'Delivery cannot be created for a completed order.',
+            ]);
+        }
 
-        return DB::transaction(function () use ($company, $order, $payload, $effectiveDeliveryManId, $status) {
+        $effectiveRiderId = $payload['rider_id'] ?? null;
+        $status = $this->resolveStatus($payload['status'] ?? null, $effectiveRiderId);
+        $effectiveCollectibleAmount = round((float) ($payload['collectible_amount'] ?? $order->collectible_amount ?? 0), 2);
+
+        $this->validateInitialOrderDeliveryState($order, $status, $payload, $effectiveCollectibleAmount);
+
+        return DB::transaction(function () use ($company, $order, $payload, $effectiveRiderId, $status) {
             $pickupData = $this->resolveAddress($payload, 'pickup', $company->id);
             $dropData = $this->resolveOrderDropData($payload, $company->id, $order);
 
@@ -76,27 +91,59 @@ class DeliveryCreationService
                 pickupData: $pickupData,
                 dropData: $dropData,
                 status: $status,
-                effectiveDeliveryManId: $effectiveDeliveryManId,
+                effectiveRiderId: $effectiveRiderId,
                 order: $order,
             );
 
             $this->copyOrderItemsToDelivery($order, $delivery, $company->id);
+            $this->syncOrderLinkedDeliveryState($delivery, $status);
 
-            return $delivery->load(['customer', 'deliveryMan', 'order', 'deliveryItems']);
+            return $delivery->load(['customer', 'rider', 'order', 'deliveryItems']);
         });
     }
 
-    private function resolveStatus(?string $requestedStatus, ?int $effectiveDeliveryManId): string
+    private function resolveStatus(?string $requestedStatus, ?int $effectiveRiderId): string
     {
-        $status = $requestedStatus ?? ($effectiveDeliveryManId ? DeliveryStatus::ASSIGNED->value : DeliveryStatus::PENDING->value);
+        $status = $requestedStatus ?? ($effectiveRiderId ? DeliveryStatus::ASSIGNED->value : DeliveryStatus::PENDING->value);
 
-        if ($status === DeliveryStatus::ASSIGNED->value && ! $effectiveDeliveryManId) {
+        if ($status === DeliveryStatus::ASSIGNED->value && ! $effectiveRiderId) {
             throw ValidationException::withMessages([
-                'delivery_man_id' => 'delivery_man_id is required when status is assigned.',
+                'rider_id' => 'rider_id is required when status is assigned.',
             ]);
         }
 
         return $status;
+    }
+
+    private function validateInitialOrderDeliveryState(Order $order, string $status, array $payload, float $collectibleAmount): void
+    {
+        if ($status !== DeliveryStatus::DELIVERED->value) {
+            return;
+        }
+
+        if ($order->payment_method !== 'cod') {
+            return;
+        }
+
+        if (! array_key_exists('collected_amount', $payload)) {
+            throw ValidationException::withMessages([
+                'collected_amount' => 'collected_amount is required when creating a delivered COD delivery.',
+            ]);
+        }
+
+        $collectedAmount = round((float) $payload['collected_amount'], 2);
+
+        if ($collectedAmount < 0) {
+            throw ValidationException::withMessages([
+                'collected_amount' => 'collected_amount must be greater than or equal to 0.',
+            ]);
+        }
+
+        if (! $this->isSameMoney($collectedAmount, $collectibleAmount)) {
+            throw ValidationException::withMessages([
+                'collected_amount' => 'For COD delivery completion, collected_amount must equal collectible_amount.',
+            ]);
+        }
     }
 
     private function createDeliveryRecord(
@@ -107,14 +154,14 @@ class DeliveryCreationService
         array $pickupData,
         array $dropData,
         string $status,
-        ?int $effectiveDeliveryManId,
+        ?int $effectiveRiderId,
         ?Order $order,
     ): Delivery {
         return Delivery::create([
             'company_id' => $company->id,
             'order_id' => $order?->id,
             'delivery_source' => $source,
-            'delivery_man_id' => $effectiveDeliveryManId,
+            'rider_id' => $effectiveRiderId,
             'customer_id' => $customerId,
 
             'pickup_address_id' => $pickupData['address_id'],
@@ -192,10 +239,6 @@ class DeliveryCreationService
 
     private function resolveOrderDropData(array $payload, int $companyId, Order $order): array
     {
-        if (! empty($payload['drop_address_id']) || ! empty($payload['drop_address'])) {
-            return $this->resolveAddress($payload, 'drop', $companyId);
-        }
-
         return [
             'address_id' => null,
             'label' => $order->delivery_contact_name,
@@ -212,6 +255,20 @@ class DeliveryCreationService
         }
 
         return $payload['provider_name'] ?? null;
+    }
+
+    private function syncOrderLinkedDeliveryState(Delivery $delivery, string $status): void
+    {
+        if (! $delivery->order_id) {
+            return;
+        }
+
+        $deliveryStatus = DeliveryStatus::from($status);
+        $this->deliveryStatusTransitionService->syncOrderOnDeliveryStatusChange($delivery, $deliveryStatus);
+
+        if ($deliveryStatus === DeliveryStatus::DELIVERED) {
+            $this->deliveryStatusTransitionService->syncOrderOnDeliveryDelivered($delivery);
+        }
     }
 
     private function createStandaloneDeliveryItems(array $items, Delivery $delivery, Company $company): void
@@ -265,5 +322,10 @@ class DeliveryCreationService
                 'notes' => $orderItem->notes,
             ]);
         }
+    }
+
+    private function isSameMoney(float $left, float $right): bool
+    {
+        return abs($left - $right) < 0.00001;
     }
 }

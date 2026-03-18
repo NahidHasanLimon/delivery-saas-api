@@ -15,7 +15,7 @@ class OtpService
         ?string $ipAddress = null,
         ?string $userAgent = null,
         int $ttlMinutes = 10,
-        string $userType = 'delivery_man'
+        string $userType = 'rider'
     ): string {
         $otp = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $otpHash = hash('sha256', $otp);

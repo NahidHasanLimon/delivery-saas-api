@@ -16,50 +16,56 @@ return new class extends Migration
             $table->string('tracking_number')->unique();
 
             $table->unsignedBigInteger('company_id');
-            $table->unsignedBigInteger('delivery_man_id')->nullable();
+            $table->unsignedBigInteger('order_id')->nullable();
+            $table->string('delivery_source', 50)->default('standalone');
+            $table->unsignedBigInteger('rider_id')->nullable();
             $table->unsignedBigInteger('customer_id');
 
-           // Optional FK to saved address (not enforced as FK for now)
+            // Optional FK to saved address (not enforced as FK for now)
             $table->unsignedBigInteger('pickup_address_id')->nullable();
             $table->unsignedBigInteger('drop_address_id')->nullable();
 
             // Snapshot of pickup
-            $table->string('pickup_label')->nullable(); 
+            $table->string('pickup_label')->nullable();
             $table->text('pickup_address');
             $table->decimal('pickup_latitude', 10, 7)->nullable();
             $table->decimal('pickup_longitude', 10, 7)->nullable();
 
             // Snapshot of drop
-            $table->string('drop_label')->nullable(); 
+            $table->string('drop_label')->nullable();
             $table->text('drop_address');
             $table->decimal('drop_latitude', 10, 7)->nullable();
             $table->decimal('drop_longitude', 10, 7)->nullable();
 
+            $table->text('delivery_notes')->nullable();
+            $table->timestamp('expected_delivery_time')->nullable();
+            $table->string('delivery_method');
+            $table->string('provider_name', 100)->nullable();
 
-            $table->text('delivery_notes')->nullable();  // ✅ useful for internal or user instructions
-            $table->string('delivery_type')->nullable(); // e.g., 'order', 'return', 'pickup'
-            $table->timestamp('expected_delivery_time')->nullable(); // ✅ allows SLA / delivery windows
-            $table->string('delivery_method'); // manual, own, third_party
+            $table->string('status', 50)->default('pending');
 
-            $table->enum('status', ['pending', 'assigned', 'in_progress', 'delivered', 'cancelled'])->default('pending'); // ✅ core flow
+            $table->text('proof_notes')->nullable();
+            $table->string('proof_image_url')->nullable();
 
-            $table->text('proof_notes')->nullable();     // ✅ e.g., “Left at door”
-            $table->string('proof_image_url')->nullable(); // ✅ delivery photo evidence
+            $table->timestamp('assigned_at')->nullable();
+            $table->timestamp('picked_at')->nullable();
+            $table->timestamp('delivered_at')->nullable();
+            $table->timestamp('cancelled_at')->nullable();
+            $table->timestamp('in_progress_at')->nullable();
 
-            $table->timestamp('assigned_at')->nullable();  // ✅ when it was assigned to delivery man
-            $table->timestamp('delivered_at')->nullable(); // ✅ when it was completed
-            $table->timestamp('in_progress_at')->nullable(); 
-            
-            $table->decimal('amount', 12, 2)->nullable(); // 💰 delivery revenue/price
+            $table->decimal('collectible_amount', 12, 2)->default(0);
+            $table->decimal('collected_amount', 12, 2)->default(0);
 
-            $table->timestamps(); // ✅ created_at, updated_at
+            $table->timestamps();
+            $table->softDeletes();
 
-            $table->index(['company_id', 'delivery_man_id']);
+            $table->index(['company_id', 'rider_id']);
+            $table->index('order_id', 'deliveries_order_id_index');
+            $table->index('delivery_source', 'deliveries_delivery_source_index');
+            $table->index('delivery_method', 'deliveries_delivery_method_index');
+            $table->index('provider_name', 'deliveries_provider_name_index');
             $table->index('status');
             $table->index('tracking_number');
-            
-            $table->softDeletes(); // 🔄 optional but highly recommended
-
         });
     }
 

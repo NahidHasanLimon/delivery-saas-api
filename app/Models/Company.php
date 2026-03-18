@@ -9,9 +9,11 @@ class Company extends Model
 {
     use HasFactory;
     //
-    public function deliveryMen()
+    public function riders()
     {
-        return $this->belongsToMany(\App\Models\DeliveryMan::class, 'company_delivery_man');
+        return $this->belongsToMany(\App\Models\Rider::class, 'company_rider')
+            ->withPivot(['status', 'joined_at'])
+            ->withTimestamps();
     }
     public function deliveries()
     {

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->unsignedBigInteger('item_id')->comment('Reference to items table');
             $table->string('item_name', 255)->comment('Snapshot of item name at order time');
             $table->string('unit', 64)->nullable()->comment('Snapshot of item unit at order time');
+            $table->decimal('unit_price', 12, 2)->default(0)->comment('Snapshot of item unit price at order time');
             $table->integer('quantity')->default(1)->comment('Ordered quantity');
             $table->string('notes', 255)->nullable()->comment('Optional note for this line item');
             $table->timestamps();
@@ -30,4 +31,3 @@ return new class extends Migration
         Schema::dropIfExists('order_items');
     }
 };
-

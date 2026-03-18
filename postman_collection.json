@@ -2,7 +2,7 @@
   "info": {
     "name": "Delivery SaaS API - Full Collection",
     "_postman_id": "2f4f9f53-9c20-4b72-99bb-7bf8f18a9c10",
-    "description": "All API routes from routes/api.php (company + delivery-man).",
+    "description": "All API routes from routes/api.php (company + rider).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -60,21 +60,21 @@
       ]
     },
     {
-      "name": "Company Delivery Men",
+      "name": "Company Riders",
       "item": [
         {
-          "name": "List Delivery Men",
+          "name": "List Riders",
           "request": {
             "method": "GET",
             "header": [
               { "key": "Accept", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{companyToken}}" }
             ],
-            "url": { "raw": "{{baseUrl}}/api/company/deliverymen", "host": ["{{baseUrl}}"], "path": ["api", "company", "deliverymen"] }
+            "url": { "raw": "{{baseUrl}}/api/company/riders", "host": ["{{baseUrl}}"], "path": ["api", "company", "riders"] }
           }
         },
         {
-          "name": "Create Delivery Man (Store)",
+          "name": "Create Rider",
           "request": {
             "method": "POST",
             "header": [
@@ -86,11 +86,11 @@
               "mode": "raw",
               "raw": "{\n  \"name\": \"John Rider\",\n  \"email\": \"rider@example.com\",\n  \"mobile_no\": \"01700000000\",\n  \"send_otp\": true\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/company/deliverymen", "host": ["{{baseUrl}}"], "path": ["api", "company", "deliverymen"] }
+            "url": { "raw": "{{baseUrl}}/api/company/riders", "host": ["{{baseUrl}}"], "path": ["api", "company", "riders"] }
           }
         },
         {
-          "name": "Invite Delivery Man",
+          "name": "Create Rider Invite",
           "request": {
             "method": "POST",
             "header": [
@@ -100,20 +100,20 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"John Rider\",\n  \"email\": \"rider@example.com\",\n  \"mobile_no\": \"01700000000\",\n  \"send_otp\": true\n}"
+              "raw": "{\n  \"mobile_number\": \"01700000000\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/company/deliverymen/invite", "host": ["{{baseUrl}}"], "path": ["api", "company", "deliverymen", "invite"] }
+            "url": { "raw": "{{baseUrl}}/api/company/rider-invites", "host": ["{{baseUrl}}"], "path": ["api", "company", "rider-invites"] }
           }
         },
         {
-          "name": "Unlink Delivery Man",
+          "name": "Unlink Rider",
           "request": {
             "method": "DELETE",
             "header": [
               { "key": "Accept", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{companyToken}}" }
             ],
-            "url": { "raw": "{{baseUrl}}/api/company/deliverymen/{{deliveryManId}}", "host": ["{{baseUrl}}"], "path": ["api", "company", "deliverymen", "{{deliveryManId}}"] }
+            "url": { "raw": "{{baseUrl}}/api/company/riders/{{riderId}}", "host": ["{{baseUrl}}"], "path": ["api", "company", "riders", "{{riderId}}"] }
           }
         }
       ]
@@ -130,15 +130,15 @@
               { "key": "Authorization", "value": "Bearer {{companyToken}}" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/company/deliveries?page=1&per_page=15&status=&delivery_type=&delivery_mode=&tracking_number=&customer_name=&customer_mobile=&from_date=&to_date=&sort_by=created_at&sort_order=desc",
+              "raw": "{{baseUrl}}/api/company/deliveries?page=1&per_page=15&status=&delivery_source=&delivery_method=&tracking_number=&customer_name=&customer_mobile=&from_date=&to_date=&sort_by=created_at&sort_order=desc",
               "host": ["{{baseUrl}}"],
               "path": ["api", "company", "deliveries"],
               "query": [
                 { "key": "page", "value": "1" },
                 { "key": "per_page", "value": "15" },
                 { "key": "status", "value": "" },
-                { "key": "delivery_type", "value": "" },
-                { "key": "delivery_mode", "value": "" },
+                { "key": "delivery_source", "value": "" },
+                { "key": "delivery_method", "value": "" },
                 { "key": "tracking_number", "value": "" },
                 { "key": "customer_name", "value": "" },
                 { "key": "customer_mobile", "value": "" },
@@ -161,7 +161,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"customer_id\": 16,\n  \"pickup_label\": \"Warehouse A\",\n  \"pickup_address\": \"A Block, Mirpur 2, Level 6\",\n  \"drop_label\": \"Customer Home\",\n  \"drop_address\": \"A Block, Mirpur 2, Level 6\",\n  \"items\": [\n    {\n      \"id\": 11,\n      \"quantity\": 1,\n      \"notes\": \"some instruction\"\n    }\n  ],\n  \"delivery_type\": \"order\",\n  \"delivery_mode\": \"walk\",\n  \"expected_delivery_time\": null,\n  \"amount\": 199,\n  \"delivery_notes\": \"ok\"\n}"
+              "raw": "{\n  \"customer_id\": 16,\n  \"pickup_label\": \"Warehouse A\",\n  \"pickup_address\": \"A Block, Mirpur 2, Level 6\",\n  \"drop_label\": \"Customer Home\",\n  \"drop_address\": \"A Block, Mirpur 2, Level 6\",\n  \"items\": [\n    {\n      \"id\": 11,\n      \"quantity\": 1,\n      \"notes\": \"some instruction\"\n    }\n  ],\n  \"delivery_source\": \"standalone\",\n  \"delivery_method\": \"manual\",\n  \"expected_delivery_time\": null,\n  \"collectible_amount\": 199,\n  \"delivery_notes\": \"ok\"\n}"
             },
             "url": { "raw": "{{baseUrl}}/api/company/deliveries", "host": ["{{baseUrl}}"], "path": ["api", "company", "deliveries"] }
           }
@@ -199,7 +199,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"delivery_man_id\": null,\n  \"status\": \"cancelled\"\n}"
+              "raw": "{\n  \"rider_id\": null,\n  \"status\": \"cancelled\"\n}"
             },
             "url": { "raw": "{{baseUrl}}/api/company/deliveries/{{deliveryId}}", "host": ["{{baseUrl}}"], "path": ["api", "company", "deliveries", "{{deliveryId}}"] }
           }

@@ -2,8 +2,8 @@
 // routes/api.php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DeliveryMan\DeliveryManAuthController;
-use App\Http\Controllers\DeliveryMan\DeliveryManInvitationController;
+use App\Http\Controllers\Rider\RiderAuthController;
+use App\Http\Controllers\Rider\RiderInvitationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,9 +23,9 @@ Route::middleware('api')->group(function () {
     // // Admin-panel auth
     // Route::prefix('admin')->group(base_path('routes/admin.php'));
 
-    // Delivery-man auth
-    Route::prefix('delivery-man')->group(base_path('routes/deliveryman.php'));
+    // Rider auth
+    Route::prefix('rider')->group(base_path('routes/rider.php'));
 
-    // Delivery-man invitation verification
-    Route::post('delivery-men/invitations/{invite_id}/verify', [DeliveryManInvitationController::class, 'verify']);
+    // Rider invitation verification
+    Route::post('rider-invites/{invite_id}/verify', [RiderInvitationController::class, 'verify']);
 });

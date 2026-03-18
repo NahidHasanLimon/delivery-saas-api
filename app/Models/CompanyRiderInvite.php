@@ -4,12 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class CompanyDeliveryManInvite extends Model
+class CompanyRiderInvite extends Model
 {
     protected $fillable = [
         'company_id',
         'mobile_number',
-        'delivery_man_id',
+        'rider_id',
         'status',
         'created_by',
     ];
@@ -19,9 +19,9 @@ class CompanyDeliveryManInvite extends Model
         return $this->belongsTo(Company::class);
     }
 
-    public function deliveryMan()
+    public function rider()
     {
-        return $this->belongsTo(DeliveryMan::class);
+        return $this->belongsTo(Rider::class);
     }
 }
 

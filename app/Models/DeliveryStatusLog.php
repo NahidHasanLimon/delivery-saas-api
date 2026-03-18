@@ -6,5 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class DeliveryStatusLog extends Model
 {
-    //
+    protected $guarded = [];
+
+    protected $casts = [
+        'changed_at' => 'datetime',
+    ];
 }

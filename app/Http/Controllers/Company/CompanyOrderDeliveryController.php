@@ -21,29 +21,25 @@ class CompanyOrderDeliveryController extends Controller
         $company = Auth::guard('company_user')->user()->company;
 
         $validated = $request->validate([
-            'delivery_man_id' => [
+            'rider_id' => [
                 'nullable',
-                Rule::exists('company_delivery_man', 'delivery_man_id')
+                Rule::exists('company_rider', 'rider_id')
                     ->where(fn ($q) => $q->where('company_id', $company->id)),
             ],
             'pickup_address_id' => [
-                'nullable',
+                'required',
                 Rule::exists('addresses', 'id')
                     ->where(fn ($q) => $q->where('company_id', $company->id)),
             ],
-            'pickup_label' => 'required_without:pickup_address_id|string',
-            'pickup_address' => 'required_without:pickup_address_id|string',
-            'pickup_latitude' => 'nullable|numeric|between:-90,90',
-            'pickup_longitude' => 'nullable|numeric|between:-180,180',
-            'drop_address_id' => [
-                'nullable',
-                Rule::exists('addresses', 'id')
-                    ->where(fn ($q) => $q->where('company_id', $company->id)),
-            ],
-            'drop_label' => 'nullable|string',
-            'drop_address' => 'nullable|string',
-            'drop_latitude' => 'nullable|numeric|between:-90,90',
-            'drop_longitude' => 'nullable|numeric|between:-180,180',
+            'pickup_label' => 'prohibited',
+            'pickup_address' => 'prohibited',
+            'pickup_latitude' => 'prohibited',
+            'pickup_longitude' => 'prohibited',
+            'drop_address_id' => 'prohibited',
+            'drop_label' => 'prohibited',
+            'drop_address' => 'prohibited',
+            'drop_latitude' => 'prohibited',
+            'drop_longitude' => 'prohibited',
             'delivery_notes' => 'nullable|string',
             'expected_delivery_time' => 'nullable|date',
             'delivery_method' => 'required|string|in:' . implode(',', DeliveryMethod::values()),

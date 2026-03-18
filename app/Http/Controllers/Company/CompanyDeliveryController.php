@@ -9,11 +9,13 @@ use App\Http\Traits\LogsCompanyActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Delivery;
+use App\Models\DeliveryProvider;
 use App\Models\Item;
 use App\Models\Order;
 use App\Enums\DeliveryStatus;
 use App\Rules\NoDuplicateItem;
 use App\Services\DeliveryCreationService;
+use App\Services\DeliveryStatusTransitionService;
 use Illuminate\Validation\Rule;
 
 class CompanyDeliveryController extends Controller
@@ -28,9 +30,9 @@ class CompanyDeliveryController extends Controller
         $request->validate([
             'page' => 'nullable|integer|min:1',
             'per_page' => 'nullable|integer|min:1|max:100',
-            'delivery_man_id' => [
+            'rider_id' => [
                 'nullable',
-                Rule::exists('company_delivery_man', 'delivery_man_id')
+                Rule::exists('company_rider', 'rider_id')
                     ->where(fn ($q) => $q->where('company_id', $company->id)),
             ],
             'order_id' => [
@@ -51,11 +53,11 @@ class CompanyDeliveryController extends Controller
         ]);
 
         $query = $company->deliveries()
-            ->with(['customer', 'deliveryMan', 'order', 'deliveryItems']);
+            ->with(['customer', 'rider', 'order', 'deliveryItems']);
 
         // Apply filters
-        if ($request->filled('delivery_man_id')) {
-            $query->where('delivery_man_id', $request->delivery_man_id);
+        if ($request->filled('rider_id')) {
+            $query->where('rider_id', $request->rider_id);
         }
 
         if ($request->filled('order_id')) {
@@ -131,7 +133,7 @@ class CompanyDeliveryController extends Controller
                 'has_more_pages' => $deliveries->hasMorePages(),
             ],
             'filters_applied' => [
-                'delivery_man_id' => $request->delivery_man_id,
+                'rider_id' => $request->rider_id,
                 'order_id' => $request->order_id,
                 'delivery_source' => $request->delivery_source,
                 'delivery_method' => $request->delivery_method,
@@ -168,9 +170,9 @@ class CompanyDeliveryController extends Controller
                 Rule::exists('orders', 'id')
                     ->where(fn ($q) => $q->where('company_id', $company->id)),
             ],
-            'delivery_man_id' => [
+            'rider_id' => [
                 'nullable',
-                Rule::exists('company_delivery_man', 'delivery_man_id')
+                Rule::exists('company_rider', 'rider_id')
                     ->where(fn ($q) => $q->where('company_id', $company->id)),
             ],
             'customer_id'     => [
@@ -212,22 +214,35 @@ class CompanyDeliveryController extends Controller
 
             // Drop address - either ID or manual input
             'drop_address_id'   => [
+                Rule::prohibitedIf($deliverySource === DeliverySource::ORDER->value),
                 'nullable',
                 Rule::exists('addresses', 'id')
                     ->where(fn ($q) => $q->where('company_id', $company->id)),
             ],
             'drop_label'        => [
+                Rule::prohibitedIf($deliverySource === DeliverySource::ORDER->value),
                 Rule::requiredIf($deliverySource === DeliverySource::STANDALONE->value && ! $request->filled('drop_address_id')),
                 'nullable',
                 'string',
             ],
             'drop_address'      => [
+                Rule::prohibitedIf($deliverySource === DeliverySource::ORDER->value),
                 Rule::requiredIf($deliverySource === DeliverySource::STANDALONE->value && ! $request->filled('drop_address_id')),
                 'nullable',
                 'string',
             ],
-            'drop_latitude'     => 'nullable|numeric|between:-90,90',
-            'drop_longitude'    => 'nullable|numeric|between:-180,180',
+            'drop_latitude'     => [
+                Rule::prohibitedIf($deliverySource === DeliverySource::ORDER->value),
+                'nullable',
+                'numeric',
+                'between:-90,90',
+            ],
+            'drop_longitude'    => [
+                Rule::prohibitedIf($deliverySource === DeliverySource::ORDER->value),
+                'nullable',
+                'numeric',
+                'between:-180,180',
+            ],
 
             'delivery_notes'  => 'nullable|string',
             'expected_delivery_time' => 'nullable|date',
@@ -310,7 +325,7 @@ class CompanyDeliveryController extends Controller
     public function show($id)
     {
         $company = Auth::guard('company_user')->user()->company;
-        $delivery = $company->deliveries()->with(['customer', 'deliveryMan', 'order', 'deliveryItems'])->findOrFail($id);
+        $delivery = $company->deliveries()->with(['customer', 'rider', 'order', 'deliveryItems'])->findOrFail($id);
 
         // Format response with clean items structure
         $response = $delivery->toArray();
@@ -319,60 +334,33 @@ class CompanyDeliveryController extends Controller
         return $this->success($response, 'Delivery fetched.');
     }
 
-    // Update delivery: assign delivery man, update status, and timestamps
-    public function update(Request $request, $id)
+    // Update delivery: assign rider, update status, and timestamps
+    public function update(Request $request, $id, DeliveryStatusTransitionService $deliveryStatusTransitionService)
     {
         $company = Auth::guard('company_user')->user()->company;
         $delivery = $company->deliveries()->findOrFail($id);
-
+        $companyUser = Auth::guard('company_user')->user();
 
         $request->validate([
-            'delivery_man_id' => [
+            'rider_id' => [
                 'nullable',
-                Rule::exists('company_delivery_man', 'delivery_man_id')
+                Rule::exists('company_rider', 'rider_id')
                     ->where(fn ($q) => $q->where('company_id', $company->id)),
             ],
             'status' => 'nullable|in:' . implode(',', DeliveryStatus::values()),
+            'collected_amount' => 'nullable|numeric|min:0',
         ]);
 
-        if ($request->has('status')) {
-            $currentStatus = DeliveryStatus::from($delivery->status);
-            $newStatus = DeliveryStatus::from($request->status);
-            if (!$currentStatus->canTransitionTo($newStatus)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid status transition from ' . $currentStatus->value . ' to ' . $newStatus->value,
-                ], 422);
-            }
-            $delivery->status = $request->status;
-            if ($newStatus === DeliveryStatus::DELIVERED) {
-                $delivery->delivered_at = now();
-            }
-            if ($newStatus === DeliveryStatus::IN_PROGRESS) {
-                $delivery->in_progress_at = now();
-                $delivery->picked_at = $delivery->picked_at ?? now();
-            }
-            if ($newStatus === DeliveryStatus::CANCELLED) {
-                $delivery->cancelled_at = now();
-            }
+        $result = $deliveryStatusTransitionService->update($delivery, $request->only([
+            'rider_id',
+            'status',
+            'collected_amount',
+        ]), $companyUser);
 
-            // Log status change activity
-            $this->logDeliveryActivity('delivery_status_changed', $delivery->load(['customer', 'deliveryMan']));
-        }
-
-        if ($request->has('delivery_man_id')) {
-            $delivery->delivery_man_id = $request->delivery_man_id;
-            $delivery->assigned_at = now();
-
-            // Log assignment activity
-            $this->logDeliveryActivity('delivery_assigned', $delivery->load(['customer', 'deliveryMan']));
-        }
-
-        $delivery->save();
-
-        $delivery->load(['customer', 'deliveryMan']);
-
-        return $this->success($delivery, 'Delivery updated successfully.');
+        return $this->success([
+            'delivery' => $result['delivery'],
+            'order' => $result['order'],
+        ], 'Delivery updated successfully.');
     }
 
     /**
@@ -381,8 +369,22 @@ class CompanyDeliveryController extends Controller
     public function getDeliveryOptions(): \Illuminate\Http\JsonResponse
     {
         return $this->success([
+            'filters' => [
+                'delivery_source' => [
+                    'type' => 'select',
+                    'label' => 'Delivery Source',
+                    'hint' => 'Filter deliveries by standalone or order source.',
+                    'default' => '',
+                    'options' => array_merge([['label' => 'All', 'value' => '']], DeliverySource::options()),
+                ],
+            ],
             'delivery_sources' => DeliverySource::options(),
             'delivery_methods' => DeliveryMethod::options(),
+            'delivery_providers' => DeliveryProvider::query()
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get(['id', 'name', 'code', 'sort_order']),
             'delivery_statuses' => DeliveryStatus::options(),
         ], 'Delivery options fetched successfully.');
     }

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('addresses', function (Blueprint $table) {
             $table->id();
 
-            // Company context (even if used for customers or deliverymen)
+            // Company context (even if used for customers or riders)
             $table->unsignedBigInteger('company_id')->nullable()->index();
 
             // Polymorphic relation

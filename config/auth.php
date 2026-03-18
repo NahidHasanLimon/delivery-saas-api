@@ -52,10 +52,10 @@ return [
             'provider' => 'system_admins',
         ],
 
-        // Delivery men (mobile‐app)
-        'delivery_man' => [
+        // Riders (mobile app)
+        'rider' => [
             'driver'   => 'jwt',
-            'provider' => 'delivery_men',
+            'provider' => 'riders',
         ],
     ],
 
@@ -97,9 +97,9 @@ return [
             'model'  => App\Models\SystemAdmin::class,
         ],
 
-        'delivery_men' => [
+        'riders' => [
             'driver' => 'eloquent',
-            'model'  => App\Models\DeliveryMan::class,
+            'model'  => App\Models\Rider::class,
         ],
     ],
 

@@ -15,9 +15,10 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('company_id')->index();
             $table->string('name');
-            $table->string('code')->nullable(); // Optional for barcode/integration
-            $table->string('unit')->nullable(); // e.g., kg, pcs
-            $table->string('notes')->nullable(); // optional
+            $table->string('code')->nullable();
+            $table->string('unit')->nullable();
+            $table->decimal('unit_price', 12, 2)->default(0);
+            $table->string('notes')->nullable();
             $table->boolean('is_active')->default(true);
 
             $table->timestamps();

@@ -8,17 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('company_delivery_man', function (Blueprint $table) {
+        Schema::create('company_rider', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('company_id');
-            $table->unsignedBigInteger('delivery_man_id');
+            $table->unsignedBigInteger('rider_id');
             $table->timestamps();
-            $table->unique(['company_id', 'delivery_man_id']);
+            $table->unique(['company_id', 'rider_id']);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('company_delivery_man');
+        Schema::dropIfExists('company_rider');
     }
 };

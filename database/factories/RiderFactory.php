@@ -3,11 +3,11 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use App\Models\DeliveryMan;
+use App\Models\Rider;
 
-class DeliveryManFactory extends Factory
+class RiderFactory extends Factory
 {
-    protected $model = DeliveryMan::class;
+    protected $model = Rider::class;
 
     public function definition(): array
     {

@@ -10,7 +10,7 @@ class Delivery extends Model
         'company_id',
         'order_id',
         'delivery_source',
-        'delivery_man_id',
+        'rider_id',
         'customer_id',
         'tracking_number',
         
@@ -84,9 +84,9 @@ class Delivery extends Model
         return $this->belongsTo(\App\Models\Order::class, 'order_id');
     }
 
-    public function deliveryMan()
+    public function rider()
     {
-        return $this->belongsTo(\App\Models\DeliveryMan::class, 'delivery_man_id');
+        return $this->belongsTo(\App\Models\Rider::class, 'rider_id');
     }
 
     public function pickupAddress()

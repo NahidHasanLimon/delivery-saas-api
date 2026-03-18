@@ -23,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
          Relation::morphMap([
         'company'      => \App\Models\Company::class,
         'customer'     => \App\Models\Customer::class,
-        'delivery_man' => \App\Models\DeliveryMan::class,
+        'rider' => \App\Models\Rider::class,
         // Add others as needed
     ]);
     }

@@ -8,8 +8,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasColumn('delivery_men', 'is_active')) {
-            Schema::table('delivery_men', function (Blueprint $table) {
+        if (Schema::hasColumn('riders', 'is_active')) {
+            Schema::table('riders', function (Blueprint $table) {
                 $table->dropColumn('is_active');
             });
         }
@@ -17,8 +17,8 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (! Schema::hasColumn('delivery_men', 'is_active')) {
-            Schema::table('delivery_men', function (Blueprint $table) {
+        if (! Schema::hasColumn('riders', 'is_active')) {
+            Schema::table('riders', function (Blueprint $table) {
                 $table->boolean('is_active')->default(false)->after('status');
             });
         }

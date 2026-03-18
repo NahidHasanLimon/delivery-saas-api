@@ -8,11 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('company_delivery_man_invites', function (Blueprint $table) {
+        Schema::create('company_rider_invites', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->string('mobile_number');
-            $table->foreignId('delivery_man_id')->nullable()->constrained('delivery_men')->nullOnDelete();
+            $table->foreignId('rider_id')->nullable()->constrained('riders')->nullOnDelete();
             $table->string('status')->default('pending'); // pending|verified|expired|canceled
             $table->foreignId('created_by')->nullable()->constrained('company_users')->nullOnDelete();
             $table->timestamps();
@@ -24,6 +24,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('company_delivery_man_invites');
+        Schema::dropIfExists('company_rider_invites');
     }
 };

@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('delivery_men', function (Blueprint $table) {
+        Schema::table('riders', function (Blueprint $table) {
             $table->string('identification_number', 20)->nullable()->unique()->after('id');
             $table->string('status')->default('active')->after('last_login_at');
             $table->unsignedBigInteger('total_deliveries')->default(0)->after('identification_number');
@@ -21,7 +21,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('delivery_men', function (Blueprint $table) {
+        Schema::table('riders', function (Blueprint $table) {
             $table->dropColumn([
                 'status',
                 'identification_number',

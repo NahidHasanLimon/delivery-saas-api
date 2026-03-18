@@ -13,13 +13,16 @@ return new class extends Migration
     {
         Schema::create('delivery_items', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('company_id')->index(); // redundant to make query faster
+            $table->unsignedBigInteger('company_id')->index();
             $table->unsignedBigInteger('delivery_id')->index();
-             $table->unsignedBigInteger('item_id')->index();
+            $table->unsignedBigInteger('item_id')->index();
+            $table->string('item_name');
+            $table->string('unit', 64)->nullable();
+            $table->decimal('unit_price', 12, 2)->default(0);
             $table->integer('quantity')->default(1);
-            $table->string('notes')->nullable(); // optional
+            $table->decimal('line_total', 12, 2)->default(0);
+            $table->string('notes')->nullable();
             $table->timestamps();
-            $table->unique(['delivery_id', 'item_id']);
         });
     }
 

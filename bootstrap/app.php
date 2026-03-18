@@ -32,7 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     'path' => $request->path(),
                     'method' => $request->method(),
                     'ip' => $request->ip(),
-                    'user_id' => auth('company_user')->id() ?? auth('delivery_man')->id(),
+                    'user_id' => auth('company_user')->id() ?? auth('rider')->id(),
                 ]);
 
                 return response()->json([
@@ -51,7 +51,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     'path' => $request->path(),
                     'method' => $request->method(),
                     'ip' => $request->ip(),
-                    'user_id' => auth('company_user')->id() ?? auth('delivery_man')->id(),
+                    'user_id' => auth('company_user')->id() ?? auth('rider')->id(),
                 ]);
 
                 return response()->json([
@@ -76,7 +76,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     'path' => $request->path(),
                     'method' => $request->method(),
                     'ip' => $request->ip(),
-                    'user_id' => auth('company_user')->id() ?? auth('delivery_man')->id(),
+                    'user_id' => auth('company_user')->id() ?? auth('rider')->id(),
                     'trace' => $e->getTraceAsString(),
                 ]);
 

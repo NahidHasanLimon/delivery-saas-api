@@ -42,12 +42,12 @@ trait LogsCompanyActivity
     protected function logDeliveryActivity($action, $delivery, $description = null)
     {
         $customerName = $delivery->customer ? $delivery->customer->name : 'Unknown Customer';
-        $deliveryManName = $delivery->deliveryMan ? $delivery->deliveryMan->name : 'unassigned';
+        $riderName = $delivery->rider ? $delivery->rider->name : 'unassigned';
         $trackingNumber = $delivery->tracking_number ?? 'Unknown';
 
         $descriptions = [
             'delivery_created' => "New delivery {$trackingNumber} created for {$customerName}",
-            'delivery_assigned' => "Delivery {$trackingNumber} assigned to {$deliveryManName}",
+            'delivery_assigned' => "Delivery {$trackingNumber} assigned to {$riderName}",
             'delivery_status_changed' => "Delivery {$trackingNumber} status changed to {$delivery->status}",
             'delivery_completed' => "Delivery {$trackingNumber} completed for {$customerName}",
             'delivery_updated' => "Delivery {$trackingNumber} updated",
@@ -77,19 +77,19 @@ trait LogsCompanyActivity
     }
 
     /**
-     * Log delivery man-related activity.
+     * Log rider-related activity.
      */
-    protected function logDeliveryManActivity($action, $deliveryMan, $description = null)
+    protected function logRiderActivity($action, $rider, $description = null)
     {
-        $deliveryManName = $deliveryMan ? $deliveryMan->name : 'Unknown Delivery Man';
+        $riderName = $rider ? $rider->name : 'Unknown Rider';
 
         $descriptions = [
-            'delivery_man_linked' => "Delivery man {$deliveryManName} linked to company",
-            'delivery_man_unlinked' => "Delivery man {$deliveryManName} unlinked from company",
+            'rider_linked' => "Rider {$riderName} linked to company",
+            'rider_unlinked' => "Rider {$riderName} unlinked from company",
         ];
 
-        $finalDescription = $description ?? $descriptions[$action] ?? "Delivery man action: {$action}";
+        $finalDescription = $description ?? $descriptions[$action] ?? "Rider action: {$action}";
 
-        $this->logActivity($action, $finalDescription, $deliveryMan);
+        $this->logActivity($action, $finalDescription, $rider);
     }
 }

@@ -9,13 +9,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (! Schema::hasTable('delivery_men') || ! Schema::hasColumn('delivery_men', 'mobile_no')) {
+        if (! Schema::hasTable('riders') || ! Schema::hasColumn('riders', 'mobile_no')) {
             return;
         }
 
-        if (! $this->hasUniqueIndex('delivery_men', 'mobile_no')) {
-            Schema::table('delivery_men', function (Blueprint $table) {
-                $table->unique('mobile_no', 'delivery_men_mobile_no_unique');
+        if (! $this->hasUniqueIndex('riders', 'mobile_no')) {
+            Schema::table('riders', function (Blueprint $table) {
+                $table->unique('mobile_no', 'riders_mobile_no_unique');
             });
         }
     }

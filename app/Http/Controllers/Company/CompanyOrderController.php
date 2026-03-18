@@ -39,10 +39,10 @@ class CompanyOrderController extends Controller
                     'label' => 'Customer Code',
                     'hint' => 'Filter by customer code.',
                 ],
-                'needs_delivery' => [
+                'is_delivery_order' => [
                     'type' => 'select',
-                    'label' => 'Needs Delivery',
-                    'hint' => 'Whether delivery details are required.',
+                    'label' => 'Delivery Order',
+                    'hint' => 'Whether the order requires delivery.',
                     'default' => '',
                     'options' => [
                         ['label' => 'All', 'value' => ''],
@@ -128,7 +128,7 @@ class CompanyOrderController extends Controller
             'order_number' => 'nullable|string|max:64',
             'customer_mobile_no' => 'nullable|string|max:32',
             'customer_code' => 'nullable|string|max:255',
-            'needs_delivery' => 'nullable|boolean',
+            'is_delivery_order' => 'nullable|boolean',
             'order_source' => 'nullable|string|in:' . implode(',', OrderSource::values()),
             'status' => 'nullable|string|in:' . implode(',', OrderStatus::values()),
             'delivery_status' => 'nullable|string|in:' . implode(',', OrderDeliveryStatus::values()),
@@ -160,8 +160,8 @@ class CompanyOrderController extends Controller
                 $q->where('customer_code', 'like', '%' . $customerCode . '%');
             });
         }
-        if ($request->filled('needs_delivery')) {
-            $query->where('needs_delivery', (bool) $request->needs_delivery);
+        if ($request->filled('is_delivery_order')) {
+            $query->where('is_delivery_order', (bool) $request->is_delivery_order);
         }
         if ($request->filled('order_source')) {
             $query->where('order_source', $request->order_source);
@@ -210,7 +210,7 @@ class CompanyOrderController extends Controller
                 'order_number' => $request->order_number,
                 'customer_mobile_no' => $request->customer_mobile_no,
                 'customer_code' => $request->customer_code,
-                'needs_delivery' => $request->needs_delivery,
+                'is_delivery_order' => $request->is_delivery_order,
                 'order_source' => $request->order_source,
                 'status' => $request->status,
                 'delivery_status' => $request->delivery_status,
@@ -251,11 +251,11 @@ class CompanyOrderController extends Controller
                 'unique:customers,email,NULL,id,company_id,' . $company->id,
             ],
 
-            'needs_delivery' => 'required|boolean',
+            'is_delivery_order' => 'required|boolean',
             'order_source' => 'nullable|string|in:' . implode(',', OrderSource::values()),
-            'status' => 'required|string|in:' . implode(',', OrderStatus::values()),
+            'status' => 'nullable|string|in:' . implode(',', OrderStatus::values()),
             'delivery_status' => [
-                Rule::requiredIf((bool) $request->input('needs_delivery')),
+                Rule::requiredIf((bool) $request->input('is_delivery_order')),
                 'nullable',
                 'string',
                 'in:' . implode(',', OrderDeliveryStatus::values()),
@@ -264,7 +264,7 @@ class CompanyOrderController extends Controller
             'delivery_contact_name' => 'nullable|string|max:128',
             'delivery_mobile_number' => 'nullable|string|max:32',
             'delivery_address' => [
-                Rule::requiredIf((bool) $request->input('needs_delivery')),
+                Rule::requiredIf((bool) $request->input('is_delivery_order')),
                 'nullable',
                 'string',
             ],
@@ -316,16 +316,16 @@ class CompanyOrderController extends Controller
                 'company_id' => $company->id,
                 'order_number' => $request->order_number ?: $this->generateOrderNumber($company->id),
                 'customer_id' => $customer->id,
-                'needs_delivery' => (bool) $request->needs_delivery,
+                'is_delivery_order' => (bool) $request->is_delivery_order,
                 'order_source' => $request->order_source,
-                'status' => $request->status,
-                'delivery_status' => $request->needs_delivery ? $request->delivery_status : null,
-                'delivery_contact_name' => $request->needs_delivery ? $request->delivery_contact_name : null,
-                'delivery_mobile_number' => $request->needs_delivery ? $request->delivery_mobile_number : null,
-                'delivery_address' => $request->needs_delivery ? $request->delivery_address : null,
-                'delivery_area' => $request->needs_delivery ? $request->delivery_area : null,
-                'delivery_latitude' => $request->needs_delivery ? $request->delivery_latitude : null,
-                'delivery_longitude' => $request->needs_delivery ? $request->delivery_longitude : null,
+                'status' => $request->input('status', OrderStatus::CREATED->value),
+                'delivery_status' => $request->is_delivery_order ? $request->delivery_status : null,
+                'delivery_contact_name' => $request->is_delivery_order ? $request->delivery_contact_name : null,
+                'delivery_mobile_number' => $request->is_delivery_order ? $request->delivery_mobile_number : null,
+                'delivery_address' => $request->is_delivery_order ? $request->delivery_address : null,
+                'delivery_area' => $request->is_delivery_order ? $request->delivery_area : null,
+                'delivery_latitude' => $request->is_delivery_order ? $request->delivery_latitude : null,
+                'delivery_longitude' => $request->is_delivery_order ? $request->delivery_longitude : null,
                 'subtotal_amount' => $subtotalAmount,
                 'delivery_fee' => $deliveryFee,
                 'adjustment_amount' => $adjustmentAmount,
