@@ -35,7 +35,7 @@ class CompanyDeliveryStatusUpdateTest extends TestCase
             ->assertJsonPath('data.order.delivery_status', OrderDeliveryStatus::DELIVERED->value)
             ->assertJsonPath('data.order.payment_status', OrderPaymentStatus::PAID->value)
             ->assertJsonPath('data.order.status', OrderStatus::COMPLETED->value)
-            ->assertJsonPath('data.order.collectible_amount', '0.00');
+            ->assertJsonPath('data.order.due_amount', '0.00');
 
         $this->assertDatabaseHas('orders', [
             'id' => $order->id,
@@ -76,7 +76,7 @@ class CompanyDeliveryStatusUpdateTest extends TestCase
 
         $this->assertDatabaseHas('deliveries', [
             'id' => $delivery->id,
-            'status' => DeliveryStatus::PENDING->value,
+            'status' => DeliveryStatus::CREATED->value,
         ]);
     }
 
@@ -87,7 +87,7 @@ class CompanyDeliveryStatusUpdateTest extends TestCase
             [
                 'payment_status' => OrderPaymentStatus::PAID->value,
                 'paid_amount' => 1060,
-                'collectible_amount' => 0,
+                'due_amount' => 0,
             ],
             [
                 'collectible_amount' => 0,
@@ -105,7 +105,7 @@ class CompanyDeliveryStatusUpdateTest extends TestCase
             ->assertJsonPath('data.order.status', OrderStatus::COMPLETED->value)
             ->assertJsonPath('data.order.payment_status', OrderPaymentStatus::PAID->value)
             ->assertJsonPath('data.order.paid_amount', '1060.00')
-            ->assertJsonPath('data.order.collectible_amount', '0.00');
+            ->assertJsonPath('data.order.due_amount', '0.00');
 
         $this->assertDatabaseHas('orders', [
             'id' => $order->id,
@@ -228,7 +228,7 @@ class CompanyDeliveryStatusUpdateTest extends TestCase
             'payment_method' => $paymentMethod,
             'payment_status' => OrderPaymentStatus::UNPAID->value,
             'paid_amount' => 0,
-            'collectible_amount' => 1060,
+            'due_amount' => 1060,
             'note' => null,
             'internal_note' => null,
             'created_by' => $companyUser->id,
@@ -256,7 +256,7 @@ class CompanyDeliveryStatusUpdateTest extends TestCase
             'expected_delivery_time' => now()->addDay(),
             'delivery_method' => 'own',
             'provider_name' => null,
-            'status' => DeliveryStatus::PENDING->value,
+            'status' => DeliveryStatus::CREATED->value,
             'collectible_amount' => 1060,
             'collected_amount' => 0,
         ], $deliveryOverrides));

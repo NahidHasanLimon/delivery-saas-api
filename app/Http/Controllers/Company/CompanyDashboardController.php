@@ -57,8 +57,9 @@ class CompanyDashboardController extends Controller
                 'active_riders' => $activeRiders,
                 'total_customers' => $totalCustomers,
                 'delivery_status_counts' => [
-                    'pending' => $deliveryStatusCounts[DeliveryStatus::PENDING->value] ?? 0,
+                    'created' => $deliveryStatusCounts[DeliveryStatus::CREATED->value] ?? 0,
                     'assigned' => $deliveryStatusCounts[DeliveryStatus::ASSIGNED->value] ?? 0,
+                    'accepted' => $deliveryStatusCounts[DeliveryStatus::ACCEPTED->value] ?? 0,
                     'in_progress' => $deliveryStatusCounts[DeliveryStatus::IN_PROGRESS->value] ?? 0,
                     'delivered' => $deliveryStatusCounts[DeliveryStatus::DELIVERED->value] ?? 0,
                     'returned' => $deliveryStatusCounts[DeliveryStatus::RETURNED->value] ?? 0,

@@ -54,10 +54,49 @@ class CompanyCustomerController extends Controller
     public function show($id)
     {
         $company = Auth::guard('company_user')->user()->company;
-        $customer = Customer::where('company_id', $company->id)
-            ->with('deliveries')
+        $customer = Customer::query()
+            ->where('company_id', $company->id)
             ->findOrFail($id);
-        return $this->success($customer, 'Customer details fetched.');
+
+        $totalOrders = $customer->orders()
+            ->where('company_id', $company->id)
+            ->count();
+
+        $lastOrders = $customer->orders()
+            ->where('company_id', $company->id)
+            ->select([
+                'id',
+                'order_number',
+                'status',
+                'delivery_status',
+                'payment_status',
+                'total_amount',
+                'due_amount',
+                'created_at',
+            ])
+            ->orderByDesc('id')
+            ->limit(3)
+            ->get();
+
+        $savedAddresses = $customer->addresses()
+            ->select([
+                'id',
+                'address_type',
+                'label',
+                'address',
+                'latitude',
+                'longitude',
+                'created_at',
+            ])
+            ->orderByDesc('id')
+            ->get();
+
+        return $this->success([
+            'customer' => $customer,
+            'total_orders' => $totalOrders,
+            'last_orders' => $lastOrders,
+            'saved_addresses' => $savedAddresses,
+        ], 'Customer details fetched.');
     }
 
     // Create customer

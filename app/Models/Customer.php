@@ -23,6 +23,11 @@ class Customer extends Model
         return $this->hasMany(\App\Models\Delivery::class, 'customer_id');
     }
 
+    public function orders()
+    {
+        return $this->hasMany(\App\Models\Order::class, 'customer_id');
+    }
+
     public function addresses()
     {
         return $this->morphMany(\App\Models\Address::class, 'addressable');

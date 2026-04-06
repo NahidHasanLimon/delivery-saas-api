@@ -38,7 +38,7 @@ class CompanyOrderDeliveryCreationTest extends TestCase
             ->assertJsonPath('data.order.delivery_status', OrderDeliveryStatus::DELIVERED->value)
             ->assertJsonPath('data.order.status', OrderStatus::COMPLETED->value)
             ->assertJsonPath('data.order.payment_status', OrderPaymentStatus::PAID->value)
-            ->assertJsonPath('data.order.collectible_amount', '0.00');
+            ->assertJsonPath('data.order.due_amount', '0.00');
 
         $this->assertDatabaseHas('orders', [
             'id' => $order->id,
@@ -57,7 +57,7 @@ class CompanyOrderDeliveryCreationTest extends TestCase
                 'delivery_status' => OrderDeliveryStatus::DELIVERED->value,
                 'payment_status' => OrderPaymentStatus::PAID->value,
                 'paid_amount' => 60,
-                'collectible_amount' => 0,
+                'due_amount' => 0,
             ]
         );
 
@@ -116,7 +116,7 @@ class CompanyOrderDeliveryCreationTest extends TestCase
             'payment_method' => $paymentMethod,
             'payment_status' => OrderPaymentStatus::UNPAID->value,
             'paid_amount' => 0,
-            'collectible_amount' => 60,
+            'due_amount' => 60,
             'created_by' => $companyUser->id,
             'updated_by' => $companyUser->id,
         ], $orderOverrides));

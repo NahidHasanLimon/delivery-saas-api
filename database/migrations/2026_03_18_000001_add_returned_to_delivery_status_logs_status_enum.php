@@ -13,7 +13,7 @@ return new class extends Migration
         }
 
         Schema::table('delivery_status_logs', function (Blueprint $table) {
-            $table->enum('status', ['pending', 'assigned', 'in_progress', 'delivered', 'returned', 'cancelled'])->change();
+            $table->enum('status', ['created', 'assigned', 'accepted', 'in_progress', 'delivered', 'returned', 'cancelled'])->change();
         });
     }
 
@@ -24,7 +24,7 @@ return new class extends Migration
         }
 
         Schema::table('delivery_status_logs', function (Blueprint $table) {
-            $table->enum('status', ['pending', 'assigned', 'in_progress', 'delivered', 'cancelled'])->change();
+            $table->enum('status', ['created', 'assigned', 'accepted', 'in_progress', 'delivered', 'cancelled'])->change();
         });
     }
 };

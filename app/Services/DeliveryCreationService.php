@@ -75,7 +75,7 @@ class DeliveryCreationService
 
         $effectiveRiderId = $payload['rider_id'] ?? null;
         $status = $this->resolveStatus($payload['status'] ?? null, $effectiveRiderId);
-        $effectiveCollectibleAmount = round((float) ($payload['collectible_amount'] ?? $order->collectible_amount ?? 0), 2);
+        $effectiveCollectibleAmount = round((float) ($payload['collectible_amount'] ?? $order->due_amount ?? 0), 2);
 
         $this->validateInitialOrderDeliveryState($order, $status, $payload, $effectiveCollectibleAmount);
 
@@ -104,7 +104,7 @@ class DeliveryCreationService
 
     private function resolveStatus(?string $requestedStatus, ?int $effectiveRiderId): string
     {
-        $status = $requestedStatus ?? ($effectiveRiderId ? DeliveryStatus::ASSIGNED->value : DeliveryStatus::PENDING->value);
+        $status = $requestedStatus ?? ($effectiveRiderId ? DeliveryStatus::ASSIGNED->value : DeliveryStatus::CREATED->value);
 
         if ($status === DeliveryStatus::ASSIGNED->value && ! $effectiveRiderId) {
             throw ValidationException::withMessages([
@@ -180,7 +180,7 @@ class DeliveryCreationService
             'expected_delivery_time' => $payload['expected_delivery_time'] ?? null,
             'delivery_method' => $payload['delivery_method'] ?? null,
             'provider_name' => $this->resolveProviderName($payload),
-            'collectible_amount' => $payload['collectible_amount'] ?? $order?->collectible_amount ?? 0,
+            'collectible_amount' => $payload['collectible_amount'] ?? $order?->due_amount ?? 0,
             'collected_amount' => $payload['collected_amount'] ?? 0,
 
             'assigned_at' => $status === DeliveryStatus::ASSIGNED->value ? now() : null,

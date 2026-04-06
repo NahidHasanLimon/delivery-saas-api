@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
 
             $table->unsignedBigInteger('delivery_id')->index();
-            $table->enum('status', ['pending', 'assigned', 'in_progress', 'delivered', 'returned', 'cancelled']);
+            $table->enum('status', ['created', 'assigned', 'accepted', 'in_progress', 'delivered', 'returned', 'cancelled']);
 
             // Who triggered the change
             $table->unsignedBigInteger('changed_by_id')->nullable();

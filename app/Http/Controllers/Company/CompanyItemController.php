@@ -51,6 +51,7 @@ class CompanyItemController extends Controller
             'name' => 'required|string|max:255|unique:items,name,NULL,id,company_id,' . $company->id,
             'code' => 'nullable|string|max:255|unique:items,code,NULL,id,company_id,' . $company->id,
             'unit' => 'nullable|string|max:50',
+            'unit_price' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
@@ -60,6 +61,7 @@ class CompanyItemController extends Controller
             'name' => $request->name,
             'code' => $request->code,
             'unit' => $request->unit,
+            'unit_price' => $request->input('unit_price', 0),
             'notes' => $request->notes,
             'is_active' => $request->boolean('is_active', true),
         ]);
@@ -97,6 +99,7 @@ class CompanyItemController extends Controller
             'name' => 'required|string|max:255|unique:items,name,' . $item->id . ',id,company_id,' . $company->id,
             'code' => 'nullable|string|max:255|unique:items,code,' . $item->id . ',id,company_id,' . $company->id,
             'unit' => 'nullable|string|max:50',
+            'unit_price' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
@@ -105,6 +108,7 @@ class CompanyItemController extends Controller
             'name' => $request->name,
             'code' => $request->code,
             'unit' => $request->unit,
+            'unit_price' => $request->input('unit_price', $item->unit_price),
             'notes' => $request->notes,
             'is_active' => $request->boolean('is_active', $item->is_active),
         ]);

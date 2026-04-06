@@ -33,7 +33,7 @@ return new class extends Migration
             $table->string('payment_method', 32)->comment('Payment method such as cash, online, cod');
             $table->string('payment_status', 32)->comment('Payment status such as unpaid, partial, paid');
             $table->decimal('paid_amount', 12, 2)->default(0)->comment('Amount already paid');
-            $table->decimal('collectible_amount', 12, 2)->default(0)->comment('Amount expected to be collected from customer');
+            $table->decimal('due_amount', 12, 2)->default(0)->comment('Amount still due from customer');
 
             $table->string('note', 255)->nullable()->comment('General note or delivery instruction');
             $table->string('internal_note', 255)->nullable()->comment('Internal business-only note');

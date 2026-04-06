@@ -157,7 +157,7 @@ class DeliveryStatusTransitionService
 
         if ($order->payment_method === OrderPaymentMethod::COD->value) {
             $order->paid_amount = $order->total_amount;
-            $order->collectible_amount = 0;
+            $order->due_amount = 0;
             $order->payment_status = OrderPaymentStatus::PAID->value;
             $order->status = OrderStatus::COMPLETED->value;
         } else {
@@ -200,8 +200,9 @@ class DeliveryStatusTransitionService
     private function mapDeliveryStatusToOrderDeliveryStatus(DeliveryStatus $status): OrderDeliveryStatus
     {
         return match ($status) {
-            DeliveryStatus::PENDING => OrderDeliveryStatus::PENDING,
+            DeliveryStatus::CREATED => OrderDeliveryStatus::PENDING,
             DeliveryStatus::ASSIGNED => OrderDeliveryStatus::ASSIGNED,
+            DeliveryStatus::ACCEPTED => OrderDeliveryStatus::ASSIGNED,
             DeliveryStatus::IN_PROGRESS => OrderDeliveryStatus::IN_PROGRESS,
             DeliveryStatus::DELIVERED => OrderDeliveryStatus::DELIVERED,
             DeliveryStatus::RETURNED => OrderDeliveryStatus::RETURNED,

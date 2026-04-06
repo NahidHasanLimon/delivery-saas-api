@@ -137,7 +137,7 @@ class CompanyOrderController extends Controller
             'delivery_mobile_number' => 'nullable|string|max:32',
             'from_date' => 'nullable|date',
             'to_date' => 'nullable|date|after_or_equal:from_date',
-            'sort_by' => 'nullable|string|in:id,order_number,created_at,updated_at,subtotal_amount,delivery_fee,adjustment_amount,total_amount,paid_amount,collectible_amount,status,delivery_status,payment_status',
+            'sort_by' => 'nullable|string|in:id,order_number,created_at,updated_at,subtotal_amount,delivery_fee,adjustment_amount,total_amount,paid_amount,due_amount,status,delivery_status,payment_status',
             'sort_order' => 'nullable|string|in:asc,desc',
         ]);
 
@@ -277,7 +277,7 @@ class CompanyOrderController extends Controller
             'payment_method' => 'required|string|in:' . implode(',', OrderPaymentMethod::values()),
             'payment_status' => 'required|string|in:' . implode(',', OrderPaymentStatus::values()),
             'paid_amount' => 'nullable|numeric|min:0',
-            'collectible_amount' => 'nullable|numeric|min:0',
+            'due_amount' => 'nullable|numeric|min:0',
 
             'note' => 'nullable|string|max:255',
             'internal_note' => 'nullable|string|max:255',
@@ -333,7 +333,7 @@ class CompanyOrderController extends Controller
                 'payment_method' => $request->payment_method,
                 'payment_status' => $request->payment_status,
                 'paid_amount' => $request->paid_amount ?? 0,
-                'collectible_amount' => $request->collectible_amount ?? $totalAmount,
+                'due_amount' => $request->due_amount ?? $totalAmount,
                 'note' => $request->note,
                 'internal_note' => $request->internal_note,
                 'created_by' => $companyUser->id,
@@ -370,6 +370,14 @@ class CompanyOrderController extends Controller
             ->with([
                 'customer:id,name,mobile_no,email,customer_code,address',
                 'orderItems.item',
+                'deliveries' => function ($query) {
+                    $query->orderByDesc('id')
+                        ->with([
+                            'rider:id,name,mobile_no',
+                            'customer:id,name,mobile_no',
+                            'deliveryItems:id,delivery_id,item_id,item_name,unit,unit_price,quantity,line_total,notes',
+                        ]);
+                },
             ])
             ->find($id);
 

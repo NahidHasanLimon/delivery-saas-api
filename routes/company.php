@@ -13,6 +13,7 @@ use App\Http\Controllers\Company\CompanyRiderInvitationController;
 use App\Http\Controllers\Company\CompanyOrderController;
 use App\Http\Controllers\Company\CompanyOrderDeliveryController;
 use App\Http\Controllers\Company\CompanyDeliveryProviderController;
+use App\Http\Controllers\Company\CompanyActivityController;
 
 Route::prefix('/')->group(function () {
     // Public
@@ -47,6 +48,8 @@ Route::prefix('/')->group(function () {
         Route::post('orders', [CompanyOrderController::class, 'store']);
         Route::post('orders/{orderId}/delivery', [CompanyOrderDeliveryController::class, 'store']);
         Route::get('orders/{id}', [CompanyOrderController::class, 'show']);
+        Route::get('activities', [CompanyActivityController::class, 'index']);
+        Route::get('activities/{id}', [CompanyActivityController::class, 'show']);
 
         // Customer management routes
         Route::get('customers', [CompanyCustomerController::class, 'index']);

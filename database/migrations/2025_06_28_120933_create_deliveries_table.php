@@ -42,7 +42,7 @@ return new class extends Migration
             $table->string('delivery_method');
             $table->string('provider_name', 100)->nullable();
 
-            $table->string('status', 50)->default('pending');
+            $table->string('status', 50)->default('created');
 
             $table->text('proof_notes')->nullable();
             $table->string('proof_image_url')->nullable();

@@ -27,7 +27,7 @@ class CompanyOrderStatusTest extends TestCase
                 'payment_method' => OrderPaymentMethod::CASH->value,
                 'payment_status' => OrderPaymentStatus::PAID->value,
                 'paid_amount' => 1000,
-                'collectible_amount' => 0,
+                'due_amount' => 0,
                 'items' => [
                     [
                         'name' => 'Item One',
